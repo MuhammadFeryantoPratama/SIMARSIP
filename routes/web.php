@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
+<<<<<<< HEAD
     return view('landing.index');
 });
 
@@ -16,4 +17,7 @@ Route::get('/login', function () {
 
 Route::get('/subscriptions', function () {
     return view('subscriptions.index');
+=======
+    return view('welcome');
+>>>>>>> c10f1214337224a0b82730728c6e73ac43aee2cf
 });
