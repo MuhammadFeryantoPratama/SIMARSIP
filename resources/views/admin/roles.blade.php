@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('title', 'Pengaturan Peran & Hak Akses - SIMARSIP')
 
@@ -389,15 +389,7 @@
         }
     };
 
-    const persistedRoles = @json($roles->mapWithKeys(fn ($role) => [
-        strtolower($role->name) => [
-            'id' => $role->id,
-            'title' => $role->name,
-            'description' => $role->description,
-            'users' => $role->users_count . ' Personil',
-            'permissions' => $role->permissions->pluck('izin')->values(),
-        ],
-    ]));
+    const persistedRoles = @json($roleRows);
 
     Object.entries(persistedRoles).forEach(([roleKey, persistedRole]) => {
         if (!rolesDatabase[roleKey]) return;

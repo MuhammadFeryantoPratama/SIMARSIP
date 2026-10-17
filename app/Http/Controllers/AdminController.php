@@ -48,8 +48,19 @@ class AdminController extends Controller
 
     public function roles(): View
     {
+        $roles = Role::query()->withCount('users')->with('permissions')->orderBy('name')->get();
+
         return view('admin.roles', [
-            'roles' => Role::query()->withCount('users')->with('permissions')->orderBy('name')->get(),
+            'roles' => $roles,
+            'roleRows' => $roles->mapWithKeys(fn (Role $role): array => [
+                strtolower($role->name) => [
+                    'id' => $role->id,
+                    'title' => $role->name,
+                    'description' => $role->description,
+                    'users' => $role->users_count.' Personil',
+                    'permissions' => $role->permissions->pluck('izin')->values(),
+                ],
+            ]),
             'categories' => Category::query()->orderBy('name')->get(),
         ]);
     }

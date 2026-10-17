@@ -1,4 +1,4 @@
-@extends('layouts.auditor')
+@extends('layouts.app')
 
 @section('title', 'Dashboard Auditor - SIMARSIP')
 

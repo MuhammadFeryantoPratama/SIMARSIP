@@ -1,4 +1,4 @@
-@extends('layouts.pimpinan')
+@extends('layouts.app')
 
 @section('title', 'Antrean Persetujuan - SIMARSIP')
 

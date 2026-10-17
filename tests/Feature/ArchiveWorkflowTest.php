@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Category;
 use App\Models\DataArsip;
 use App\Models\HakAkses;
 use App\Models\Role;
@@ -21,14 +22,18 @@ it('allows staff to upload an archive for approval', function (): void {
     Storage::fake('local');
     $role = Role::create(['name' => 'Staff', 'description' => 'Staff']);
     $user = User::factory()->create(['role_id' => $role->id]);
+    $category = Category::create(['name' => 'Legal']);
 
     $response = $this->actingAs($user)->post(route('staff.archives.upload'), [
         'document' => UploadedFile::fake()->create('surat-keputusan.pdf', 100, 'application/pdf'),
+        'category_id' => $category->id,
+        'status' => 'disetujui',
     ]);
 
     $response->assertRedirect();
     expect(DataArsip::count())->toBe(1);
     expect(DataArsip::first()->status)->toBe('menunggu');
+    expect(DataArsip::first()->category_id)->toBe($category->id);
     Storage::disk('local')->assertExists(DataArsip::first()->document_path);
 });
 

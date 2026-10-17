@@ -12,11 +12,6 @@ class ArchiveController extends Controller
     public function index(Request $request): View
     {
         $role = strtolower((string) $request->user()->role?->name);
-        $layout = str_contains($role, 'admin')
-            ? 'layouts.admin'
-            : (str_contains($role, 'pimpin') || str_contains($role, 'validator')
-                ? 'layouts.pimpinan'
-                : (str_contains($role, 'audit') ? 'layouts.auditor' : 'layouts.staff'));
         $uploadRoute = str_contains($role, 'admin')
             ? route('admin.archives.store')
             : (str_contains($role, 'staff') || str_contains($role, 'editor')
@@ -38,7 +33,7 @@ class ArchiveController extends Controller
             ->withQueryString();
 
         return view('arsips', [
-            'layout' => $layout,
+            'layout' => 'layouts.app',
             'uploadRoute' => $uploadRoute,
             'canUpload' => $uploadRoute !== null,
             'archives' => $archives,

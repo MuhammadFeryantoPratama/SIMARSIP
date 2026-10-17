@@ -159,24 +159,9 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Kategori</label>
                     <select id="newDocCategory" required class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                        <option value="Keuangan">Keuangan</option>
-                        <option value="Legal">Legal</option>
-                        <option value="Operasional">Operasional</option>
-                        <option value="SDM">SDM</option>
-                    </select>
-                </div>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Tanggal Pengarsipan</label>
-                    <input type="date" id="newDocDate" required class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Status Awal</label>
-                    <select id="newDocStatus" required class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                        <option value="menunggu">Menunggu</option>
-                        <option value="disetujui">Disetujui</option>
-                        <option value="ditolak">Ditolak</option>
+                        @foreach ($categories as $category)
+                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                        @endforeach
                     </select>
                 </div>
             </div>
@@ -360,7 +345,6 @@
 
     // Modal: Tambah Arsip Baru
     function showCreateArsipModal() {
-        document.getElementById('newDocDate').value = new Date().toISOString().split('T')[0];
         document.getElementById('createArsipModal').classList.add('active');
     }
     function closeCreateArsipModal() {
@@ -382,7 +366,6 @@
         payload.append('document', file);
         payload.append('title', name);
         payload.append('category_id', cat);
-        payload.append('status', 'menunggu');
 
         fetch(@js($uploadRoute), {
             method: 'POST',
