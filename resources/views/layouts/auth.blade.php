@@ -28,6 +28,7 @@
     {{-- Page Content --}}
     <div class="relative z-10 w-full flex items-center justify-center">
         @yield('content')
+        @include('components.flash')
     </div>
 </body>
 </html>

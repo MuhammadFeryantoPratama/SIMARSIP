@@ -7,7 +7,7 @@
     {{-- Header matching Image 1 --}}
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-black text-[#0b1f51] tracking-tight">Selamat Pagi, Teddy</h1>
+            <h1 class="text-2xl font-black text-[#0b1f51] tracking-tight">Selamat Pagi, {{ auth()->user()->name }}</h1>
             <p class="text-xs text-slate-500 mt-1">Berikut ringkasan manajemen arsip digital hari ini.</p>
         </div>
         <div class="flex items-center gap-2.5">
@@ -36,7 +36,7 @@
             </div>
             <div class="mt-4">
                 <p class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">TOTAL DOKUMEN</p>
-                <h3 class="text-2xl font-black text-slate-800 tracking-tight mt-0.5" id="statStaffTotal">2,543</h3>
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight mt-0.5" id="statStaffTotal">{{ number_format($archiveCount, 0, ',', '.') }}</h3>
             </div>
         </div>
 
@@ -52,7 +52,7 @@
             </div>
             <div class="mt-4">
                 <p class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">MENUNGGU PERSETUJUAN</p>
-                <h3 class="text-2xl font-black text-slate-800 tracking-tight mt-0.5">42</h3>
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight mt-0.5">{{ number_format($pendingArchiveCount, 0, ',', '.') }}</h3>
             </div>
         </div>
 
@@ -68,7 +68,7 @@
             </div>
             <div class="mt-4">
                 <p class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">AKTIVITAS TERBARU</p>
-                <h3 class="text-2xl font-black text-slate-800 tracking-tight mt-0.5">156</h3>
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight mt-0.5">{{ number_format($recentArchives->count(), 0, ',', '.') }}</h3>
             </div>
         </div>
 
@@ -84,7 +84,7 @@
             </div>
             <div class="mt-4">
                 <p class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">DOKUMEN TERVERIFIKASI</p>
-                <h3 class="text-2xl font-black text-slate-800 tracking-tight mt-0.5">98%</h3>
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight mt-0.5">{{ $archiveCount > 0 ? number_format(($approvedArchiveCount / $archiveCount) * 100, 0) : 0 }}%</h3>
             </div>
         </div>
     </div>
@@ -325,10 +325,7 @@
 @push('scripts')
 <script>
     function handleExportLog() {
-        showToast('Mengekspor rekap aktivitas log staff ke CSV...', 'info');
-        setTimeout(() => {
-            showToast('Log berhasil diekspor: SIMARSIP-Staff-Log.csv', 'success');
-        }, 1200);
+        window.location.href = "{{ route('archives.export') }}";
     }
 
     function showInputBaruModal() {
@@ -340,16 +337,8 @@
 
     function handleInputBaruSubmit(e) {
         e.preventDefault();
-        const name = document.getElementById('newInputName').value.trim();
-        const dept = document.getElementById('newInputDept').value;
-        const size = document.getElementById('newInputSize').value || '1.8 MB';
-        const status = document.getElementById('newInputStatus').value;
-
-        addNewUploadRow({ name: name, dept: dept, size: size, date: 'Hari ini, Baru saja', status: status });
-
         closeInputBaruModal();
-        document.getElementById('newInputName').value = '';
-        showToast(`Dokumen "${name}" berhasil diinput!`, 'success');
+        showUploadModal();
     }
 
     function addNewUploadRow(data) {
@@ -396,17 +385,21 @@
     function handleDropFileSelected(input) {
         if (input.files && input.files[0]) {
             const file = input.files[0];
-            showToast(`Mengunggah file: ${file.name}...`, 'info');
-            setTimeout(() => {
-                addNewUploadRow({
-                    name: file.name,
-                    dept: 'Akademik',
-                    size: (file.size/1024/1024).toFixed(1) + ' MB',
-                    date: 'Hari ini, Baru saja',
-                    status: 'TERVERIFIKASI'
-                });
-                showToast(`File "${file.name}" berhasil diunggah dan terverifikasi!`, 'success');
-            }, 1000);
+            const payload = new FormData();
+            payload.append('document', file);
+
+            fetch("{{ route('staff.archives.upload') }}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+                body: payload,
+            }).then(response => {
+                if (!response.ok) throw new Error('Upload gagal. Periksa format dan ukuran berkas.');
+                showToast(`File "${file.name}" berhasil dikirim untuk persetujuan.`, 'success');
+                setTimeout(() => window.location.reload(), 700);
+            }).catch(error => showToast(error.message, 'error'));
         }
     }
 
@@ -425,6 +418,25 @@
 
     function previewStaffDoc(name, dept, size, status) {
         showToast(`Membuka berkas ${name} (${dept})`, 'info');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const archives = @json($recentArchiveRows);
+        const body = document.getElementById('staffUploadsTable');
+        if (!body) return;
+        body.innerHTML = archives.length ? archives.map(archive => `
+            <tr class="hover:bg-slate-50/50 transition-colors">
+                <td class="py-4 px-6"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><span class="material-icons-outlined text-lg">description</span></div><div><p class="font-bold text-slate-800">${escapeHtml(archive.name)}</p><p class="text-[11px] text-slate-400">ARS-${String(archive.id).padStart(6, '0')}</p></div></div></td>
+                <td class="py-4 px-4 text-slate-700 font-semibold">Arsip Digital</td>
+                <td class="py-4 px-4 text-slate-500">${archive.date}</td>
+                <td class="py-4 px-4"><span class="px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider ${archive.status === 'disetujui' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : archive.status === 'ditolak' ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-amber-50 text-amber-600 border-amber-100'} border uppercase">${archive.status}</span></td>
+                <td class="py-4 px-6 text-right"><a href="${archive.url}" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600" title="Unduh"><span class="material-icons-outlined text-base">download</span></a></td>
+            </tr>
+        `).join('') : '<tr><td colspan="5" class="py-10 text-center text-xs text-slate-400">Belum ada dokumen.</td></tr>';
+    });
+
+    function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]));
     }
 </script>
 @endpush

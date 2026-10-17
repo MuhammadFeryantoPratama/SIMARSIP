@@ -13,7 +13,7 @@
         <div class="flex items-center gap-2.5">
             <div class="flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-200/90 rounded-xl text-xs font-semibold text-slate-600 shadow-xs">
                 <span class="material-icons-outlined text-slate-400 text-sm">calendar_today</span>
-                <span>Hari Ini: <span id="currentDateDisplay" class="text-slate-800">24 Okt 2023</span></span>
+                <span>Hari Ini: <span id="currentDateDisplay" class="text-slate-800">{{ now()->translatedFormat('d M Y') }}</span></span>
             </div>
             <button onclick="handleUpdateDashboardData()" id="updateDataBtn" class="flex items-center gap-2 px-4 py-2 bg-[#0b1f51] hover:bg-[#122b6c] text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-[0.98]">
                 <span class="material-icons-outlined text-sm transition-transform" id="refreshIcon">sync</span>
@@ -36,8 +36,8 @@
             </div>
             <div class="mt-4">
                 <p class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">TOTAL PENGGUNA</p>
-                <h3 class="text-2xl font-black text-slate-800 tracking-tight mt-0.5" id="statTotalUsers">1,248</h3>
-                <p class="text-[11px] text-slate-500 mt-1" id="statActiveToday">86 user aktif hari ini</p>
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight mt-0.5" id="statTotalUsers">{{ number_format($userCount) }}</h3>
+                <p class="text-[11px] text-slate-500 mt-1" id="statActiveToday">{{ number_format($activeUserCount) }} user berubah hari ini</p>
             </div>
         </div>
 
@@ -53,8 +53,8 @@
             </div>
             <div class="mt-4">
                 <p class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">ARSIP BARU</p>
-                <h3 class="text-2xl font-black text-slate-800 tracking-tight mt-0.5" id="statNewDocs">342</h3>
-                <p class="text-[11px] text-slate-500 mt-1">Total 15,204 dokumen</p>
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight mt-0.5" id="statNewDocs">{{ number_format($newArchiveCount) }}</h3>
+                <p class="text-[11px] text-slate-500 mt-1">Total {{ number_format($archiveCount) }} dokumen</p>
             </div>
         </div>
 
@@ -70,7 +70,7 @@
             </div>
             <div class="mt-4">
                 <p class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">AKSES TERTUNDA</p>
-                <h3 class="text-2xl font-black text-slate-800 tracking-tight mt-0.5" id="statPendingAccess">18</h3>
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight mt-0.5" id="statPendingAccess">{{ number_format($pendingArchiveCount) }}</h3>
                 <p class="text-[11px] text-slate-500 mt-1">Butuh persetujuan segera</p>
             </div>
         </div>
@@ -260,7 +260,7 @@
                 {{-- Storage Used --}}
                 <div class="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-sm space-y-2">
                     <p class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">STORAGE USED</p>
-                    <h3 class="text-2xl font-black text-slate-800 tracking-tight">842 GB</h3>
+                    <h3 class="text-2xl font-black text-slate-800 tracking-tight">{{ number_format($storageUsageBytes / 1024 / 1024, 2) }} MB</h3>
                     <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-3">
                         <div class="bg-[#1877F2] h-full rounded-full transition-all duration-1000" style="width: 70%"></div>
                     </div>
@@ -271,13 +271,15 @@
                     <p class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">ACTIVE USERS</p>
                     <div class="flex items-center gap-1 pt-1">
                         <div class="flex -space-x-2 overflow-hidden">
-                            <div class="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-slate-700 text-white font-bold text-[10px] flex items-center justify-center">AS</div>
-                            <div class="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-blue-600 text-white font-bold text-[10px] flex items-center justify-center">BP</div>
-                            <div class="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-emerald-600 text-white font-bold text-[10px] flex items-center justify-center">SN</div>
-                            <div class="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-slate-100 text-slate-700 font-bold text-[10px] flex items-center justify-center border border-slate-200">+12</div>
+                            @foreach ($users->take(3) as $user)
+                                <div class="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-slate-700 text-white font-bold text-[10px] flex items-center justify-center">{{ collect(explode(' ', $user->name))->map(fn ($part) => strtoupper(substr($part, 0, 1)))->take(2)->implode('') }}</div>
+                            @endforeach
+                            @if ($users->count() > 3)
+                                <div class="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-slate-100 text-slate-700 font-bold text-[10px] flex items-center justify-center border border-slate-200">+{{ $users->count() - 3 }}</div>
+                            @endif
                         </div>
                     </div>
-                    <p class="text-[11px] text-slate-500 mt-2">System active for 432 days</p>
+                    <p class="text-[11px] text-slate-500 mt-2">{{ $activeUserCount }} user memperbarui data hari ini</p>
                 </div>
             </div>
         </div>
@@ -444,9 +446,10 @@
                     <p class="text-[11px] text-blue-700 mt-0.5">Pastikan file Excel atau CSV memiliki kolom: Nama Dokumen, Nomor Arsip, Kategori, Tanggal.</p>
                 </div>
             </div>
-            <div class="border-2 border-dashed border-slate-200 hover:border-blue-400 bg-slate-50/50 rounded-xl p-8 text-center cursor-pointer transition-all" onclick="showToast('Memilih file spreadsheet...', 'info')">
+            <div class="border-2 border-dashed border-slate-200 hover:border-blue-400 bg-slate-50/50 rounded-xl p-8 text-center cursor-pointer transition-all" onclick="document.getElementById('batchImportFiles').click()">
+                <input type="file" id="batchImportFiles" class="hidden" multiple accept=".pdf,.doc,.docx,.zip,.xls,.xlsx" onchange="showBatchFileNames(this)">
                 <span class="material-icons-outlined text-4xl text-slate-300 mb-1">table_view</span>
-                <p class="text-xs font-bold text-slate-700">Unggah file .XLSX atau .CSV</p>
+                <p id="batchImportFileName" class="text-xs font-bold text-slate-700">Unggah file arsip</p>
                 <p class="text-[10px] text-slate-400 mt-1">Ukuran maksimal berkas 25MB</p>
             </div>
         </div>
@@ -456,7 +459,7 @@
             </button>
             <div class="flex gap-2">
                 <button onclick="closeBatchImportModal()" class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
-                <button onclick="closeBatchImportModal(); showToast('35 berkas berhasil diimpor ke sistem!', 'success');" class="px-5 py-2 bg-[#0b1f51] text-white rounded-xl text-xs font-bold">Mulai Impor</button>
+                <button onclick="handleBatchImport()" class="px-5 py-2 bg-[#0b1f51] text-white rounded-xl text-xs font-bold">Mulai Impor</button>
             </div>
         </div>
     </div>
@@ -558,17 +561,7 @@
 <script>
     // Update Data Button Functionality
     function handleUpdateDashboardData() {
-        const icon = document.getElementById('refreshIcon');
-        icon.classList.add('animate-spin');
-
-        setTimeout(() => {
-            icon.classList.remove('animate-spin');
-            // Refresh stats slightly to give realistic feeling
-            document.getElementById('statTotalUsers').textContent = '1,249';
-            document.getElementById('statActiveToday').textContent = '89 user aktif hari ini';
-            document.getElementById('statNewDocs').textContent = '345';
-            showToast('Seluruh metrik dan analitik berhasil diperbarui!', 'success');
-        }, 800);
+        window.location.reload();
     }
 
     // Modal: Buat Akun Baru
@@ -588,61 +581,55 @@
 
         if (!name || !nip) return;
 
-        // Initials
-        const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-
-        // Prepend row to table
-        const tbody = document.getElementById('userTableBody');
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50/50 transition-colors bg-blue-50/20';
-        tr.innerHTML = `
-            <td class="py-3.5 px-6">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">
-                        ${initials}
-                    </div>
-                    <div>
-                        <p class="font-bold text-slate-800">${name}</p>
-                        <p class="text-[11px] text-slate-400">NIP. ${nip}</p>
-                    </div>
-                </div>
-            </td>
-            <td class="py-3.5 px-4">
-                <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                    ${role}
-                </span>
-            </td>
-            <td class="py-3.5 px-4">
-                <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold ${status === 'Aktif' ? 'text-emerald-600' : 'text-slate-400'}">
-                    <span class="w-1.5 h-1.5 rounded-full ${status === 'Aktif' ? 'bg-emerald-500' : 'bg-slate-300'}"></span> ${status}
-                </span>
-            </td>
-            <td class="py-3.5 px-6 text-right">
-                <button onclick="handleUserRowAction('${name}')" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600" title="Kelola Akun">
-                    <span class="material-icons-outlined text-base">more_horiz</span>
-                </button>
-            </td>
-        `;
-        tbody.insertBefore(tr, tbody.firstChild);
-
-        closeCreateUserModal();
-        document.getElementById('newUserName').value = '';
-        document.getElementById('newUserNIP').value = '';
-
-        showToast(`Akun user "${name}" berhasil didaftarkan!`, 'success');
+        fetch("{{ route('admin.users.store') }}", {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ name, nip, role, status }),
+        }).then(response => {
+            if (!response.ok) throw new Error('Akun gagal dibuat. Pastikan NIP belum digunakan.');
+            return response;
+        }).then(() => {
+            closeCreateUserModal();
+            showToast(`Akun user "${name}" berhasil didaftarkan!`, 'success');
+            setTimeout(() => window.location.reload(), 700);
+        }).catch(error => showToast(error.message, 'error'));
     }
 
     // User Row Action
-    function handleUserRowAction(userName) {
-        const action = prompt(`Pilihan aksi untuk ${userName}:\n1. Ubah Status (Aktif/Nonaktif)\n2. Reset Kata Sandi\n3. Hapus Akun\n\nKetik nomor aksi:`, '1');
+    function handleUserRowAction(userId, userName) {
+        const action = prompt(`Pilihan aksi untuk ${userName}:\n1. Reset Kata Sandi\n2. Hapus Akun\n\nKetik nomor aksi:`, '1');
         if (action === '1') {
-            showToast(`Status akun ${userName} berhasil diperbarui.`, 'success');
-        } else if (action === '2') {
-            showToast(`Tautan reset kata sandi dikirimkan ke email ${userName}.`, 'info');
-        } else if (action === '3') {
-            if (confirm(`Yakin ingin menghapus akun ${userName}?`)) {
-                showToast(`Akun ${userName} berhasil dihapus dari sistem.`, 'error');
-            }
+            const password = prompt('Masukkan kata sandi baru (minimal 8 karakter):');
+            if (!password) return;
+
+            fetch(`/admin/users/${userId}/password`, {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ password }),
+            }).then(response => {
+                if (!response.ok) throw new Error('Kata sandi gagal direset.');
+                showToast(`Kata sandi ${userName} berhasil direset.`, 'success');
+            }).catch(error => showToast(error.message, 'error'));
+        } else if (action === '2' && confirm(`Yakin ingin menghapus akun ${userName}?`)) {
+            fetch(`/admin/users/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+            }).then(response => {
+                if (!response.ok) throw new Error('Akun gagal dihapus.');
+                showToast(`Akun ${userName} berhasil dihapus.`, 'success');
+                setTimeout(() => window.location.reload(), 700);
+            }).catch(error => showToast(error.message, 'error'));
         }
     }
 
@@ -669,6 +656,44 @@
         document.getElementById('batchImportModal').classList.remove('active');
     }
 
+    function showBatchFileNames(input) {
+        const count = input.files?.length || 0;
+        document.getElementById('batchImportFileName').textContent = count
+            ? `${count} berkas dipilih`
+            : 'Unggah file arsip';
+    }
+
+    async function handleBatchImport() {
+        const files = [...(document.getElementById('batchImportFiles').files || [])];
+        if (!files.length) {
+            showToast('Pilih setidaknya satu berkas untuk diimpor.', 'error');
+            return;
+        }
+
+        try {
+            for (const file of files) {
+                const payload = new FormData();
+                payload.append('document', file);
+                payload.append('status', 'menunggu');
+                const response = await fetch("{{ route('admin.archives.store') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                    },
+                    body: payload,
+                });
+                if (!response.ok) throw new Error(`Gagal mengimpor ${file.name}.`);
+            }
+
+            closeBatchImportModal();
+            showToast(`${files.length} berkas berhasil dikirim untuk persetujuan.`, 'success');
+            setTimeout(() => window.location.reload(), 700);
+        } catch (error) {
+            showToast(error.message, 'error');
+        }
+    }
+
     // Modal: Cek Validitas
     function showCheckValidityModal() {
         document.getElementById('checkValidityModal').classList.add('active');
@@ -691,6 +716,47 @@
         setTimeout(() => {
             showToast('Diagnostik selesai: Skor keamanan 92%. Semua enkripsi AES-256 aktif.', 'success');
         }, 1500);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const users = @json($userRows);
+
+        const userTableBody = document.getElementById('userTableBody');
+        if (userTableBody && users.length) {
+            userTableBody.innerHTML = users.map(user => `
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="py-3.5 px-6">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center flex-shrink-0">${user.initials}</div>
+                            <div>
+                                <p class="font-bold text-slate-800">${escapeHtml(user.name)}</p>
+                                <p class="text-[11px] text-slate-400">NIP. ${escapeHtml(user.username)}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="py-3.5 px-4"><span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">${escapeHtml(user.role)}</span></td>
+                    <td class="py-3.5 px-4"><span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Aktif</span></td>
+                    <td class="py-3.5 px-6 text-right"><button onclick="handleUserRowAction(${user.id}, '${escapeJs(user.name)}')" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600" title="Kelola Akun"><span class="material-icons-outlined text-base">more_horiz</span></button></td>
+                </tr>
+            `).join('');
+        }
+
+        const totalUsers = document.getElementById('statTotalUsers');
+        if (totalUsers) totalUsers.textContent = users.length.toLocaleString('id-ID');
+        const newDocs = document.getElementById('statNewDocs');
+        if (newDocs) newDocs.textContent = @json($archiveCount);
+        const pending = document.getElementById('statPendingAccess');
+        if (pending) pending.textContent = @json($pendingArchiveCount);
+    });
+
+    function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, character => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+        }[character]));
+    }
+
+    function escapeJs(value) {
+        return String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     }
 </script>
 @endpush

@@ -22,6 +22,7 @@
 
     <main>
         @yield('content')
+        @include('components.flash')
     </main>
 
     @include('components.footer')

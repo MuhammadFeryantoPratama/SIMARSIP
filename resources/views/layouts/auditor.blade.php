@@ -145,16 +145,16 @@
                                 <span id="auditorInitials" class="hidden">RF</span>
                             </div>
                             <div class="hidden md:block">
-                                <p class="text-xs font-bold text-slate-800 leading-tight">Rafskuy</p>
-                                <p class="text-[10px] text-slate-400 leading-tight">Auditor</p>
+                                <p class="text-xs font-bold text-slate-800 leading-tight">{{ auth()->user()->name }}</p>
+                                <p class="text-[10px] text-slate-400 leading-tight">{{ auth()->user()->role?->name }}</p>
                             </div>
                         </button>
 
                         <div id="profileDropdown" class="dropdown-menu">
                             <div class="p-2">
                                 <div class="px-3 py-2 border-b border-slate-100 mb-1">
-                                    <p class="text-xs font-bold text-slate-800">Rafskuy</p>
-                                    <p class="text-[10px] text-slate-400">rafskuy@simarsip.go.id • Auditor</p>
+                                    <p class="text-xs font-bold text-slate-800">{{ auth()->user()->name }}</p>
+                                    <p class="text-[10px] text-slate-400">{{ auth()->user()->email }} • {{ auth()->user()->role?->name }}</p>
                                 </div>
                                 <a href="{{ route('admin.dashboard') }}" class="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all">
                                     <span class="material-icons-outlined text-base">admin_panel_settings</span> Beralih ke Admin Sistem
@@ -178,6 +178,7 @@
             {{-- Main Content Scrollable Area --}}
             <main class="flex-1 overflow-y-auto custom-scroll p-8">
                 @yield('content')
+                @include('components.flash')
             </main>
         </div>
     </div>
@@ -240,7 +241,13 @@
         function closeHelpModal() { document.getElementById('helpModal').classList.remove('active'); }
         function handleLogout() {
             if (confirm('Keluar dari sesi Auditor Rafskuy?')) {
-                window.location.href = "{{ route('login') }}";
+                fetch("{{ route('logout') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                    },
+                }).then(() => { window.location.href = "{{ route('login') }}"; });
             }
         }
         function showToast(message, type = 'info') {

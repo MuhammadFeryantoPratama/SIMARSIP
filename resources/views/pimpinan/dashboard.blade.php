@@ -29,7 +29,7 @@
             <div>
                 <p class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">TOTAL ARSIP DIGITAL</p>
                 <div class="flex items-baseline gap-3 mt-2">
-                    <h2 class="text-4xl font-black text-slate-800 tracking-tight" id="statTotalArsip">128,492</h2>
+                    <h2 class="text-4xl font-black text-slate-800 tracking-tight" id="statTotalArsip">{{ number_format($archiveCount, 0, ',', '.') }}</h2>
                     <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center gap-0.5">
                         <span class="material-icons-outlined text-xs">trending_up</span> +12.5%
                     </span>
@@ -45,8 +45,8 @@
             </div>
             <div class="mt-4">
                 <p class="text-xs font-bold text-slate-700">Dokumen Masuk</p>
-                <h3 class="text-2xl font-black text-slate-800 tracking-tight mt-1" id="statDokumenMasuk">1,204</h3>
-                <p class="text-[11px] text-slate-400 mt-1">24 menunggu persetujuan</p>
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight mt-1" id="statDokumenMasuk">{{ number_format($todayArchiveCount, 0, ',', '.') }}</h3>
+                <p class="text-[11px] text-slate-400 mt-1">{{ number_format($pendingArchiveCount, 0, ',', '.') }} menunggu persetujuan</p>
             </div>
         </div>
 
@@ -404,41 +404,27 @@
     }
 
     function handleExportReport() {
-        showToast('Membuat berkas Laporan Eksekutif Pimpinan (PDF)...', 'info');
-        setTimeout(() => {
-            showToast('Laporan berhasil diekspor: SIMARSIP-Laporan-Eksekutif.pdf', 'success');
-        }, 1500);
+        window.location.href = "{{ route('archives.export') }}";
     }
 
     function quickApprove(button, docName) {
-        button.disabled = true;
-        button.className = "px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold transition-all shadow-xs";
-        button.textContent = "Disetujui ✓";
-
-        // Add to timeline
-        const timeline = document.getElementById('timelineList');
-        const newItem = document.createElement('div');
-        newItem.className = 'flex items-start gap-3 bg-emerald-50/50 p-2 rounded-xl transition-all';
-        newItem.innerHTML = `
-            <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span class="material-icons-outlined text-sm">check_circle</span>
-            </div>
-            <div class="flex-1">
-                <h4 class="font-bold text-slate-800">Approval Berhasil</h4>
-                <p class="text-[11px] text-slate-500">${docName} telah disetujui</p>
-                <span class="text-[10px] text-slate-400 mt-0.5 block">Baru saja</span>
-            </div>
-        `;
-        timeline.insertBefore(newItem, timeline.firstChild);
-
-        // Update badge
-        const badge = document.getElementById('sidebarBadgeCount');
-        if (badge) {
-            const current = parseInt(badge.textContent.trim()) || 12;
-            if (current > 1) badge.textContent = current - 1;
+        const archiveId = button.closest('[data-archive-id]')?.dataset.archiveId;
+        if (!archiveId) {
+            showToast('Arsip tidak ditemukan.', 'error');
+            return;
         }
 
-        showToast(`Dokumen "${docName}" berhasil disetujui!`, 'success');
+        fetch(`/pimpinan/arsip/${archiveId}/approve`, {
+            method: 'PATCH',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            },
+        }).then(response => {
+            if (!response.ok) throw new Error('Persetujuan gagal disimpan.');
+            showToast(`Dokumen "${docName}" berhasil disetujui!`, 'success');
+            setTimeout(() => window.location.reload(), 700);
+        }).catch(error => showToast(error.message, 'error'));
     }
 
     function showAuditModal() {
@@ -450,6 +436,24 @@
 
     function toggleQuickMenu() {
         showToast('Menu Cepat: Menampilkan ringkasan akses Pimpinan', 'info');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const archives = @json($recentArchiveRows);
+        const body = document.getElementById('dashboardApprovalTable');
+        if (!body) return;
+        body.innerHTML = archives.length ? archives.map(archive => `
+            <tr class="hover:bg-slate-50/50 transition-colors" data-archive-id="${archive.id}">
+                <td class="py-4 px-6"><div class="flex items-center gap-3.5"><div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><span class="material-icons-outlined text-lg">description</span></div><div><p class="font-bold text-slate-800">${escapeHtml(archive.name)}</p><p class="text-[11px] text-slate-400">Ref: ARS-${String(archive.id).padStart(6, '0')}</p></div></div></td>
+                <td class="py-4 px-4"><p class="font-bold text-slate-700">Pengguna Arsip</p><p class="text-[11px] text-slate-400">${archive.date}</p></td>
+                <td class="py-4 px-4"><span class="px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider bg-blue-50 text-blue-600 border border-blue-100 uppercase">NORMAL</span></td>
+                <td class="py-4 px-6 text-right"><button onclick="quickApprove(this, '${escapeHtml(archive.name)}')" class="px-3 py-1.5 bg-[#0b1f51] hover:bg-[#122b6c] text-white rounded-lg text-xs font-bold transition-all shadow-xs">Setujui</button></td>
+            </tr>
+        `).join('') : '<tr><td colspan="4" class="py-10 text-center text-xs text-slate-400">Tidak ada antrean persetujuan.</td></tr>';
+    });
+
+    function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]));
     }
 </script>
 @endpush

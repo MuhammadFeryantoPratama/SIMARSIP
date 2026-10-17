@@ -170,16 +170,16 @@
                                 <span>PB</span>
                             </div>
                             <div class="hidden md:block">
-                                <p class="text-xs font-bold text-slate-800 leading-tight">Prabskuy</p>
-                                <p class="text-[10px] text-slate-400 leading-tight">Sistem Administrator</p>
+                                <p class="text-xs font-bold text-slate-800 leading-tight">{{ auth()->user()->name }}</p>
+                                <p class="text-[10px] text-slate-400 leading-tight">{{ auth()->user()->role?->name }}</p>
                             </div>
                         </button>
 
                         <div id="profileDropdown" class="dropdown-menu">
                             <div class="p-2">
                                 <div class="px-3 py-2 border-b border-slate-100 mb-1">
-                                    <p class="text-xs font-bold text-slate-800">Prabskuy</p>
-                                    <p class="text-[11px] text-slate-400">admin@simarsip.go.id</p>
+                                    <p class="text-xs font-bold text-slate-800">{{ auth()->user()->name }}</p>
+                                    <p class="text-[11px] text-slate-400">{{ auth()->user()->email }}</p>
                                 </div>
                                 <button onclick="showToast('Membuka profil...', 'info'); toggleProfileDropdown();" class="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all text-left">
                                     <span class="material-icons-outlined text-base">person_outline</span> Profil Saya
@@ -209,6 +209,7 @@
             {{-- Main Content Scrollable Area --}}
             <main class="flex-1 overflow-y-auto custom-scroll p-8">
                 @yield('content')
+                @include('components.flash')
             </main>
         </div>
     </div>
@@ -243,10 +244,9 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Kategori</label>
                         <select id="uploadDocCategory" required class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                            <option value="Keuangan">Keuangan</option>
-                            <option value="Legal">Legal</option>
-                            <option value="Operasional">Operasional</option>
-                            <option value="SDM">SDM</option>
+                            @foreach ($categories as $category)
+                                <option value="{{ $category->id }}">{{ $category->name }}</option>
+                            @endforeach
                         </select>
                     </div>
                 </div>
@@ -399,18 +399,33 @@
             e.preventDefault();
             const docName = document.getElementById('uploadDocName').value;
             const category = document.getElementById('uploadDocCategory').value;
-            closeUploadModal();
-            showToast(`Dokumen "${docName}" berhasil diunggah ke kategori ${category}!`, 'success');
-            // If on arsip page, append or refresh
-            if (typeof appendNewArsipRow === 'function') {
-                appendNewArsipRow({
-                    name: docName,
-                    no: document.getElementById('uploadDocNo').value || 'INV-2023-NEW',
-                    category: category,
-                    date: 'Hari ini',
-                    status: 'Finalized'
-                });
+            const file = document.getElementById('fileUploadInput').files[0];
+            if (!file) {
+                showToast('Pilih berkas sebelum mengunggah.', 'error');
+                return;
             }
+
+            const payload = new FormData();
+            payload.append('document', file);
+            payload.append('title', docName);
+            payload.append('category_id', category);
+            payload.append('status', 'menunggu');
+
+            fetch("{{ route('admin.archives.store') }}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+                body: payload,
+            }).then(response => {
+                if (!response.ok) throw new Error('Upload gagal.');
+                return response;
+            }).then(() => {
+                closeUploadModal();
+                showToast(`Dokumen "${docName}" berhasil dikirim untuk persetujuan.`, 'success');
+                setTimeout(() => window.location.reload(), 700);
+            }).catch(error => showToast(error.message, 'error'));
         }
 
         // Global search bar
@@ -434,10 +449,13 @@
         // Logout
         function handleLogout() {
             if (confirm('Apakah Anda yakin ingin keluar dari sistem SIMARSIP?')) {
-                showToast('Mengakhiri sesi...', 'info');
-                setTimeout(() => {
-                    window.location.href = "{{ route('login') }}";
-                }, 600);
+                fetch("{{ route('logout') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                    },
+                }).then(() => { window.location.href = "{{ route('login') }}"; });
             }
         }
 

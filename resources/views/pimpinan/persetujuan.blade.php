@@ -16,7 +16,7 @@
         <div class="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-sm flex items-center justify-between">
             <div>
                 <p class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">MENUNGGU PERSETUJUAN</p>
-                <h2 class="text-3xl font-black text-slate-800 tracking-tight mt-1" id="statPendingCount">12</h2>
+                <h2 class="text-3xl font-black text-slate-800 tracking-tight mt-1" id="statPendingCount">{{ $archives->count() }}</h2>
             </div>
             <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center flex-shrink-0">
                 <span class="material-icons-outlined text-2xl">folder_shared</span>
@@ -27,7 +27,7 @@
         <div class="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-sm flex items-center justify-between">
             <div>
                 <p class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">DISETUJUI HARI INI</p>
-                <h2 class="text-3xl font-black text-slate-800 tracking-tight mt-1" id="statApprovedCount">45</h2>
+                <h2 class="text-3xl font-black text-slate-800 tracking-tight mt-1" id="statApprovedCount">{{ $approvedTodayCount }}</h2>
             </div>
             <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
                 <span class="material-icons-outlined text-2xl">check_circle</span>
@@ -38,7 +38,7 @@
         <div class="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-sm flex items-center justify-between">
             <div>
                 <p class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">PERLU REVISI</p>
-                <h2 class="text-3xl font-black text-rose-600 tracking-tight mt-1" id="statRevisionCount">3</h2>
+                <h2 class="text-3xl font-black text-rose-600 tracking-tight mt-1" id="statRevisionCount">{{ $rejectedArchiveCount }}</h2>
             </div>
             <div class="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0">
                 <span class="material-icons-outlined text-2xl">error_outline</span>
@@ -69,92 +69,37 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-xs" id="approvalItemsBody">
-                        {{-- Row 1: Laporan_Keuangan_Q1_2024.pdf --}}
-                        <tr class="hover:bg-slate-50/50 transition-colors approval-row" id="row-doc-1">
-                            <td class="py-4 px-6 cursor-pointer" onclick="openDocModal('Laporan_Keuangan_Q1_2024.pdf', 'Divisi Keuangan', 'MENDESAK', 'Ref: ARS-2024-001 • 12.4 MB')">
-                                <div class="flex items-center gap-3.5">
-                                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
-                                        <span class="material-icons-outlined text-lg">picture_as_pdf</span>
+                        @forelse ($archives as $archive)
+                            <tr class="hover:bg-slate-50/50 transition-colors approval-row" id="row-doc-{{ $archive->id }}">
+                                <td class="py-4 px-6 cursor-pointer" onclick="openDocModal({{ $archive->id }}, @js($archive->document_name), 'Staff', 'Ref: ARS-{{ str_pad((string) $archive->id, 6, '0', STR_PAD_LEFT) }}')">
+                                    <div class="flex items-center gap-3.5">
+                                        <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                            <span class="material-icons-outlined text-lg">description</span>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-slate-800 hover:text-blue-600 transition-colors">{{ $archive->document_name }}</p>
+                                            <p class="text-[11px] text-slate-400">Ref: ARS-{{ str_pad((string) $archive->id, 6, '0', STR_PAD_LEFT) }}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p class="font-bold text-slate-800 hover:text-blue-600 transition-colors">Laporan_Keuangan_Q1_2024.pdf</p>
-                                        <p class="text-[11px] text-slate-400">Ref: ARS-2024-001 • 12.4 MB</p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="py-4 px-4">
-                                <p class="font-bold text-slate-700">Divisi Keuangan</p>
-                                <p class="text-[11px] text-slate-400">10 menit yang lalu</p>
-                            </td>
-                            <td class="py-4 px-4">
-                                <span class="px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider bg-rose-50 text-rose-600 border border-rose-100 uppercase">
-                                    MENDESAK
-                                </span>
-                            </td>
-                            <td class="py-4 px-6 text-right">
-                                <button onclick="handleApproveRow('row-doc-1', 'Laporan_Keuangan_Q1_2024.pdf')" class="px-4 py-1.5 bg-[#0b1f51] hover:bg-[#122b6c] text-white rounded-lg text-xs font-bold transition-all shadow-xs active:scale-[0.98]">
-                                    Setujui
-                                </button>
-                            </td>
-                        </tr>
-
-                        {{-- Row 2: Mou_Kerjasama_Stategis_V2.docx --}}
-                        <tr class="hover:bg-slate-50/50 transition-colors approval-row" id="row-doc-2">
-                            <td class="py-4 px-6 cursor-pointer" onclick="openDocModal('Mou_Kerjasama_Stategis_V2.docx', 'Biro Hukum', 'NORMAL', 'Ref: LEG-2024-042 • 1.2 MB')">
-                                <div class="flex items-center gap-3.5">
-                                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
-                                        <span class="material-icons-outlined text-lg">article</span>
-                                    </div>
-                                    <div>
-                                        <p class="font-bold text-slate-800 hover:text-blue-600 transition-colors">Mou_Kerjasama_Stategis_V2.docx</p>
-                                        <p class="text-[11px] text-slate-400">Ref: LEG-2024-042 • 1.2 MB</p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="py-4 px-4">
-                                <p class="font-bold text-slate-700">Biro Hukum</p>
-                                <p class="text-[11px] text-slate-400">2 jam yang lalu</p>
-                            </td>
-                            <td class="py-4 px-4">
-                                <span class="px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider bg-blue-50 text-blue-600 border border-blue-100 uppercase">
-                                    NORMAL
-                                </span>
-                            </td>
-                            <td class="py-4 px-6 text-right">
-                                <button onclick="handleApproveRow('row-doc-2', 'Mou_Kerjasama_Stategis_V2.docx')" class="px-4 py-1.5 bg-[#0b1f51] hover:bg-[#122b6c] text-white rounded-lg text-xs font-bold transition-all shadow-xs active:scale-[0.98]">
-                                    Setujui
-                                </button>
-                            </td>
-                        </tr>
-
-                        {{-- Row 3: Scan_Sertifikat_Aset_K09.jpg --}}
-                        <tr class="hover:bg-slate-50/50 transition-colors approval-row" id="row-doc-3">
-                            <td class="py-4 px-6 cursor-pointer" onclick="openDocModal('Scan_Sertifikat_Aset_K09.jpg', 'Aset & Sarpras', 'RENDAH', 'Ref: AST-2024-089 • 4.5 MB')">
-                                <div class="flex items-center gap-3.5">
-                                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
-                                        <span class="material-icons-outlined text-lg">image</span>
-                                    </div>
-                                    <div>
-                                        <p class="font-bold text-slate-800 hover:text-blue-600 transition-colors">Scan_Sertifikat_Aset_K09.jpg</p>
-                                        <p class="text-[11px] text-slate-400">Ref: AST-2024-089 • 4.5 MB</p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="py-4 px-4">
-                                <p class="font-bold text-slate-700">Aset & Sarpras</p>
-                                <p class="text-[11px] text-slate-400">Kemarin, 16:45</p>
-                            </td>
-                            <td class="py-4 px-4">
-                                <span class="px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider bg-slate-100 text-slate-600 border border-slate-200 uppercase">
-                                    RENDAH
-                                </span>
-                            </td>
-                            <td class="py-4 px-6 text-right">
-                                <button onclick="handleApproveRow('row-doc-3', 'Scan_Sertifikat_Aset_K09.jpg')" class="px-4 py-1.5 bg-[#0b1f51] hover:bg-[#122b6c] text-white rounded-lg text-xs font-bold transition-all shadow-xs active:scale-[0.98]">
-                                    Setujui
-                                </button>
-                            </td>
-                        </tr>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <p class="font-bold text-slate-700">Staff</p>
+                                    <p class="text-[11px] text-slate-400">{{ $archive->created_at->diffForHumans() }}</p>
+                                </td>
+                                <td class="py-4 px-4">
+                                    <span class="px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider bg-blue-50 text-blue-600 border border-blue-100 uppercase">NORMAL</span>
+                                </td>
+                                <td class="py-4 px-6 text-right">
+                                    <button onclick="handleApproveRow({{ $archive->id }}, @js($archive->document_name))" class="px-4 py-1.5 bg-[#0b1f51] hover:bg-[#122b6c] text-white rounded-lg text-xs font-bold transition-all shadow-xs active:scale-[0.98]">
+                                        Setujui
+                                    </button>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="py-10 text-center text-xs text-slate-400">Belum ada arsip yang menunggu persetujuan.</td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
@@ -266,39 +211,27 @@
 @push('scripts')
 <script>
     let activeModalDoc = '';
+    let activeModalId = null;
 
-    function handleApproveRow(rowId, docName) {
-        const row = document.getElementById(rowId);
-        if (row) {
-            row.style.opacity = '0.4';
-            row.style.pointerEvents = 'none';
-            const btn = row.querySelector('button');
-            if (btn) {
-                btn.className = "px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold";
-                btn.textContent = "Disetujui ✓";
-            }
-        }
-
-        // Stats updates
-        const pendingEl = document.getElementById('statPendingCount');
-        const approvedEl = document.getElementById('statApprovedCount');
-        if (pendingEl) pendingEl.textContent = Math.max(0, parseInt(pendingEl.textContent) - 1);
-        if (approvedEl) approvedEl.textContent = parseInt(approvedEl.textContent) + 1;
-
-        // Badge update
-        const badge = document.getElementById('sidebarBadgeCount');
-        if (badge) {
-            const count = parseInt(badge.textContent) || 12;
-            if (count > 0) badge.textContent = count - 1;
-        }
-
-        // Add to timeline
-        addToTimeline('Approval Berhasil', `Menyetujui dokumen ${docName}`, 'emerald');
-
-        showToast(`Dokumen "${docName}" berhasil disetujui!`, 'success');
+    function handleApproveRow(archiveId, docName) {
+        fetch(`/pimpinan/arsip/${archiveId}/approve`, {
+            method: 'PATCH',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            },
+        }).then(response => {
+            if (!response.ok) throw new Error('Persetujuan gagal diproses.');
+            return response;
+        }).then(() => {
+            addToTimeline('Approval Berhasil', `Menyetujui dokumen ${docName}`, 'emerald');
+            showToast(`Dokumen "${docName}" berhasil disetujui!`, 'success');
+            setTimeout(() => window.location.reload(), 700);
+        }).catch(error => showToast(error.message, 'error'));
     }
 
-    function openDocModal(name, sender, priority, ref) {
+    function openDocModal(archiveId, name, sender, priority, ref) {
+        activeModalId = archiveId;
         activeModalDoc = name;
         document.getElementById('modalDocTitle').textContent = name;
         document.getElementById('modalDocRef').textContent = ref;
@@ -313,13 +246,27 @@
 
     function handleApproveModal() {
         closeDocModal();
-        handleApproveRow('row-doc-1', activeModalDoc);
+        handleApproveRow(activeModalId, activeModalDoc);
     }
 
     function handleRejectModal() {
         closeDocModal();
-        addToTimeline('Penolakan Dokumen', `Menolak berkas ${activeModalDoc}`, 'rose');
-        showToast(`Dokumen "${activeModalDoc}" ditolak.`, 'error');
+        fetch(`/pimpinan/arsip/${activeModalId}/reject`, {
+            method: 'PATCH',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ reason: document.getElementById('modalDocNotes')?.value || null }),
+        }).then(response => {
+            if (!response.ok) throw new Error('Penolakan gagal diproses.');
+            return response;
+        }).then(() => {
+            addToTimeline('Penolakan Dokumen', `Menolak berkas ${activeModalDoc}`, 'rose');
+            showToast(`Dokumen "${activeModalDoc}" ditolak.`, 'error');
+            setTimeout(() => window.location.reload(), 700);
+        }).catch(error => showToast(error.message, 'error'));
     }
 
     function handleRevisionModal() {

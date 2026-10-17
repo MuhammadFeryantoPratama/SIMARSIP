@@ -146,24 +146,24 @@
                     {{-- Divider --}}
                     <div class="h-8 w-px bg-slate-200 mx-1"></div>
 
-                    {{-- User Profile: Teddy (Staff Khusus) matching Image --}}
+                    {{-- User Profile --}}
                     <div class="relative">
                         <button onclick="toggleProfileDropdown()" class="flex items-center gap-3 py-1.5 px-2 rounded-xl hover:bg-slate-100 transition-all text-left">
                             <div class="w-9 h-9 rounded-full overflow-hidden bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-xs ring-2 ring-blue-200 flex-shrink-0">
-                                <img src="{{ asset('images/user-avatar.jpg') }}" alt="Teddy" class="w-full h-full object-cover" onerror="this.remove(); document.getElementById('staffInitials').classList.remove('hidden');">
-                                <span id="staffInitials" class="hidden">TD</span>
+                                <img src="{{ asset('images/user-avatar.jpg') }}" alt="{{ auth()->user()->name }}" class="w-full h-full object-cover" onerror="this.remove(); document.getElementById('staffInitials').classList.remove('hidden');">
+                                <span id="staffInitials" class="hidden">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</span>
                             </div>
                             <div class="hidden md:block">
-                                <p class="text-xs font-bold text-slate-800 leading-tight">Teddy</p>
-                                <p class="text-[10px] text-slate-400 leading-tight">Staff Khusus</p>
+                                <p class="text-xs font-bold text-slate-800 leading-tight">{{ auth()->user()->name }}</p>
+                                <p class="text-[10px] text-slate-400 leading-tight">{{ auth()->user()->role?->name }}</p>
                             </div>
                         </button>
 
                         <div id="profileDropdown" class="dropdown-menu">
                             <div class="p-2">
                                 <div class="px-3 py-2 border-b border-slate-100 mb-1">
-                                    <p class="text-xs font-bold text-slate-800">Teddy</p>
-                                    <p class="text-[10px] text-slate-400">teddy@simarsip.go.id • Staff Khusus</p>
+                                    <p class="text-xs font-bold text-slate-800">{{ auth()->user()->name }}</p>
+                                    <p class="text-[10px] text-slate-400">{{ auth()->user()->email }} • {{ auth()->user()->role?->name }}</p>
                                 </div>
                                 <a href="{{ route('admin.dashboard') }}" class="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all">
                                     <span class="material-icons-outlined text-base">admin_panel_settings</span> Beralih ke Admin Sistem
@@ -187,6 +187,7 @@
             {{-- Main Content Scrollable Area --}}
             <main class="flex-1 overflow-y-auto custom-scroll p-8">
                 @yield('content')
+                @include('components.flash')
             </main>
         </div>
     </div>
@@ -232,6 +233,14 @@
                         <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Ukuran File</label>
                         <input type="text" id="staffUploadSize" placeholder="2.4 MB" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
                     </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Kategori</label>
+                    <select id="staffUploadCategory" required class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                        @foreach ($categories as $category)
+                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="border-2 border-dashed border-slate-200 hover:border-blue-400 bg-slate-50/50 rounded-xl p-6 text-center cursor-pointer transition-all" onclick="document.getElementById('hiddenFileInput').click()">
                     <input type="file" id="hiddenFileInput" class="hidden" onchange="staffFileChosen(this)">
@@ -291,7 +300,13 @@
         function closeUploadModal() { document.getElementById('uploadModal').classList.remove('active'); }
         function handleLogout() {
             if (confirm('Keluar dari sesi Staff Teddy?')) {
-                window.location.href = "{{ route('login') }}";
+                fetch("{{ route('logout') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                    },
+                }).then(() => { window.location.href = "{{ route('login') }}"; });
             }
         }
         function showToast(message, type = 'info') {
@@ -320,12 +335,32 @@
             e.preventDefault();
             const name = document.getElementById('staffUploadName').value;
             const dept = document.getElementById('staffUploadDept').value;
-            const size = document.getElementById('staffUploadSize').value || '1.5 MB';
-            closeUploadModal();
-            showToast(`Berkas "${name}" berhasil diunggah!`, 'success');
-            if (typeof addNewUploadRow === 'function') {
-                addNewUploadRow({ name: name, dept: dept, size: size, date: 'Hari ini, Baru saja', status: 'TERVERIFIKASI' });
+            const file = document.getElementById('hiddenFileInput').files[0];
+            if (!file) {
+                showToast('Pilih berkas sebelum mengunggah.', 'error');
+                return;
             }
+
+            const payload = new FormData();
+            payload.append('document', file);
+            payload.append('title', name);
+            payload.append('category_id', document.getElementById('staffUploadCategory').value);
+
+            fetch("{{ route('staff.archives.upload') }}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+                body: payload,
+            }).then(response => {
+                if (!response.ok) throw new Error('Upload gagal.');
+                return response;
+            }).then(() => {
+                closeUploadModal();
+                showToast(`Berkas "${name}" berhasil dikirim untuk persetujuan.`, 'success');
+                setTimeout(() => window.location.reload(), 700);
+            }).catch(error => showToast(error.message, 'error'));
         }
         function handleGlobalSearch(e) {
             if (e.key === 'Enter') {

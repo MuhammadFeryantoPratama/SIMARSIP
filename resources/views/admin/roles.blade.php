@@ -389,6 +389,39 @@
         }
     };
 
+    const persistedRoles = @json($roles->mapWithKeys(fn ($role) => [
+        strtolower($role->name) => [
+            'id' => $role->id,
+            'title' => $role->name,
+            'description' => $role->description,
+            'users' => $role->users_count . ' Personil',
+            'permissions' => $role->permissions->pluck('izin')->values(),
+        ],
+    ]));
+
+    Object.entries(persistedRoles).forEach(([roleKey, persistedRole]) => {
+        if (!rolesDatabase[roleKey]) return;
+
+        const permissionNames = new Set(persistedRole.permissions);
+        rolesDatabase[roleKey].id = persistedRole.id;
+        rolesDatabase[roleKey].title = persistedRole.title;
+        rolesDatabase[roleKey].description = persistedRole.description || rolesDatabase[roleKey].description;
+        rolesDatabase[roleKey].users = persistedRole.users;
+        rolesDatabase[roleKey].permissions = {
+            create: permissionNames.has('arsip.create'),
+            view: permissionNames.has('arsip.view'),
+            edit: permissionNames.has('arsip.edit'),
+            delete: permissionNames.has('arsip.delete'),
+            restore: permissionNames.has('arsip.restore'),
+            approve: permissionNames.has('arsip.approve'),
+            reject: permissionNames.has('arsip.reject'),
+            audit: permissionNames.has('arsip.audit'),
+            export: permissionNames.has('arsip.export'),
+            create_user: permissionNames.has('users.create'),
+            edit_roles: permissionNames.has('roles.edit'),
+        };
+    });
+
     let activeRoleId = 'admin';
     let isDirty = false;
 
@@ -479,7 +512,10 @@
     // Save changes
     function handleSavePermissions() {
         const role = rolesDatabase[activeRoleId];
-        if (!role) return;
+        if (!role || !role.id) {
+            showToast('Peran belum tersedia untuk disimpan.', 'error');
+            return;
+        }
 
         role.permissions = {
             create: document.getElementById('perm_create').checked,
@@ -495,15 +531,43 @@
             edit_roles: document.getElementById('perm_edit_roles').checked
         };
 
-        isDirty = false;
-        showToast(`Perubahan hak akses untuk "${role.title}" berhasil disimpan!`, 'success');
+        const permissions = Object.entries(role.permissions)
+            .filter(([, enabled]) => enabled)
+            .map(([permission]) => ({
+                create: 'arsip.create',
+                view: 'arsip.view',
+                edit: 'arsip.edit',
+                delete: 'arsip.delete',
+                restore: 'arsip.restore',
+                approve: 'arsip.approve',
+                reject: 'arsip.reject',
+                audit: 'arsip.audit',
+                export: 'arsip.export',
+                create_user: 'users.create',
+                edit_roles: 'roles.edit',
+            }[permission]))
+            .filter(Boolean);
+
+        fetch(`/admin/roles/${role.id}/permissions`, {
+            method: 'PATCH',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ permissions }),
+        }).then(response => {
+            if (!response.ok) throw new Error('Hak akses gagal disimpan.');
+            isDirty = false;
+            showToast(`Perubahan hak akses untuk "${role.title}" berhasil disimpan!`, 'success');
+        }).catch(error => showToast(error.message, 'error'));
     }
 
     // Reset permissions
     function handleResetPermissions() {
         if (confirm(`Kembalikan hak akses "${rolesDatabase[activeRoleId].title}" ke konfigurasi standar?`)) {
             applyRoleToUI(activeRoleId);
-            showToast(`Hak akses "${rolesDatabase[activeRoleId].title}" berhasil direset.`, 'info');
+            handleSavePermissions();
         }
     }
 
@@ -523,45 +587,23 @@
 
         if (!title) return;
 
-        const newId = 'custom_' + Date.now();
-        const basePerms = rolesDatabase[preset] ? { ...rolesDatabase[preset].permissions } : {
-            create: false, view: true, edit: false, delete: false, restore: false,
-            approve: false, reject: false, audit: false, export: false,
-            create_user: false, edit_roles: false
-        };
+        fetch("{{ route('admin.roles.store') }}", {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ name: title, description: desc, preset }),
+        }).then(response => {
+            if (!response.ok) throw new Error('Peran gagal disimpan. Nama peran mungkin sudah digunakan.');
+            return response;
+        }).then(() => {
+            closeCreateRoleModal();
+            showToast(`Peran "${title}" berhasil disimpan.`, 'success');
+            setTimeout(() => window.location.reload(), 700);
+        }).catch(error => showToast(error.message, 'error'));
 
-        rolesDatabase[newId] = {
-            title: title,
-            subtitle: 'Peran Tambahan',
-            icon: 'manage_accounts',
-            description: desc,
-            users: '0 Personil',
-            permissions: basePerms
-        };
-
-        // Append to container
-        const container = document.getElementById('rolesContainer');
-        const newRow = document.createElement('div');
-        newRow.id = `role-btn-${newId}`;
-        newRow.onclick = () => selectRole(newId);
-        newRow.className = 'role-row flex items-center gap-3.5 px-4 py-3.5 cursor-pointer transition-all border-l-4 border-l-transparent bg-white hover:bg-slate-50';
-        newRow.innerHTML = `
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-slate-400">
-                <span class="material-icons-outlined text-2xl">manage_accounts</span>
-            </div>
-            <div class="flex-1 min-w-0">
-                <h3 class="role-title text-xs font-bold text-slate-800 leading-tight">${title}</h3>
-                <p class="text-[11px] text-slate-400 truncate mt-0.5">Peran Tambahan</p>
-            </div>
-        `;
-        container.appendChild(newRow);
-
-        closeCreateRoleModal();
-        document.getElementById('newRoleTitle').value = '';
-        document.getElementById('newRoleDesc').value = '';
-
-        showToast(`Peran baru "${title}" berhasil ditambahkan!`, 'success');
-        selectRole(newId);
     }
 
     // Initialize

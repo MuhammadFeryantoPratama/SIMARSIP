@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends($layout)
 
 @section('title', 'Daftar Arsip Digital - SIMARSIP')
 
@@ -11,10 +11,12 @@
             <p class="text-xs text-slate-500 mt-1">Kelola dan akses semua dokumen kelembagaan yang telah diarsipkan.</p>
         </div>
         <div>
-            <button onclick="showCreateArsipModal()" class="flex items-center gap-2 px-4 py-2.5 bg-[#0b1f51] hover:bg-[#122b6c] text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-[0.98]">
-                <span class="material-icons-outlined text-base">add</span>
-                <span>Tambah Arsip Baru</span>
-            </button>
+            @if ($canUpload)
+                <button onclick="showCreateArsipModal()" class="flex items-center gap-2 px-4 py-2.5 bg-[#0b1f51] hover:bg-[#122b6c] text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-[0.98]">
+                    <span class="material-icons-outlined text-base">add</span>
+                    <span>Tambah Arsip Baru</span>
+                </button>
+            @endif
         </div>
     </div>
 
@@ -49,27 +51,27 @@
                     <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Kategori</label>
                     <select id="filterCategorySelect" onchange="filterArsipTable()" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20">
                         <option value="">Semua Kategori</option>
-                        <option value="Keuangan">Keuangan</option>
-                        <option value="Legal">Legal</option>
-                        <option value="Operasional">Operasional</option>
-                        <option value="SDM">SDM</option>
+                        @foreach ($categories as $category)
+                            <option value="{{ $category->name }}">{{ $category->name }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Status Dokumen</label>
                     <select id="filterStatusSelect" onchange="filterArsipTable()" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20">
                         <option value="">Semua Status</option>
-                        <option value="Finalized">Finalized</option>
-                        <option value="Draft">Draft</option>
-                        <option value="Archived">Archived</option>
+                        <option value="menunggu">Menunggu</option>
+                        <option value="disetujui">Disetujui</option>
+                        <option value="ditolak">Ditolak</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Rentang Tahun</label>
                     <select id="filterYearSelect" onchange="filterArsipTable()" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20">
                         <option value="">Semua Tahun</option>
-                        <option value="2023">2023</option>
-                        <option value="2022">2022</option>
+                        @foreach ($archives->getCollection()->pluck('created_at')->map(fn ($date) => $date->format('Y'))->unique()->sortDesc() as $year)
+                            <option value="{{ $year }}">{{ $year }}</option>
+                        @endforeach
                     </select>
                 </div>
             </div>
@@ -94,176 +96,34 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-xs" id="arsipTableBody">
-                    {{-- Row 1: Laporan Keuangan Q3 2023.pdf --}}
-                    <tr class="hover:bg-slate-50/50 transition-colors arsip-data-row" data-name="Laporan Keuangan Q3 2023.pdf" data-no="INV-2023-001-A" data-category="Keuangan" data-status="Finalized" data-date="15 Okt 2023">
-                        <td class="py-4 px-6">
-                            <div class="flex items-center gap-3.5">
-                                <span class="material-icons-outlined text-slate-400 text-xl flex-shrink-0">description</span>
-                                <div>
-                                    <p class="font-bold text-slate-800">Laporan Keuangan Q3 2023.pdf</p>
-                                    <p class="text-[11px] text-slate-400">INV-2023-001-A</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="py-4 px-4">
-                            <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                                Keuangan
-                            </span>
-                        </td>
-                        <td class="py-4 px-4 text-slate-600 font-medium">
-                            15 Okt 2023
-                        </td>
-                        <td class="py-4 px-4">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Finalized
-                            </span>
-                        </td>
-                        <td class="py-4 px-6 text-center">
-                            <div class="flex items-center justify-center gap-2 text-slate-400">
-                                <button onclick="previewArsip('Laporan Keuangan Q3 2023.pdf', 'INV-2023-001-A', 'Keuangan', 'Finalized', '15 Okt 2023')" class="p-1.5 hover:bg-slate-100 hover:text-blue-600 rounded-lg transition-colors" title="Lihat Pratinjau">
-                                    <span class="material-icons-outlined text-lg">visibility</span>
-                                </button>
-                                <button onclick="downloadArsip('Laporan Keuangan Q3 2023.pdf')" class="p-1.5 hover:bg-slate-100 hover:text-blue-600 rounded-lg transition-colors" title="Unduh Berkas">
-                                    <span class="material-icons-outlined text-lg">download</span>
-                                </button>
-                                <button onclick="editArsip('Laporan Keuangan Q3 2023.pdf', 'INV-2023-001-A', 'Keuangan', 'Finalized')" class="p-1.5 hover:bg-slate-100 hover:text-blue-600 rounded-lg transition-colors" title="Ubah Metadata">
-                                    <span class="material-icons-outlined text-lg">edit</span>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    {{-- Row 2: Draft Perjanjian Kerja Sama Vendor.docx --}}
-                    <tr class="hover:bg-slate-50/50 transition-colors arsip-data-row" data-name="Draft Perjanjian Kerja Sama Vendor.docx" data-no="LGL-2023-089" data-category="Legal" data-status="Draft" data-date="12 Nov 2023">
-                        <td class="py-4 px-6">
-                            <div class="flex items-center gap-3.5">
-                                <span class="material-icons-outlined text-slate-400 text-xl flex-shrink-0">article</span>
-                                <div>
-                                    <p class="font-bold text-slate-800">Draft Perjanjian Kerja Sama Vendor.docx</p>
-                                    <p class="text-[11px] text-slate-400">LGL-2023-089</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="py-4 px-4">
-                            <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                                Legal
-                            </span>
-                        </td>
-                        <td class="py-4 px-4 text-slate-600 font-medium">
-                            12 Nov 2023
-                        </td>
-                        <td class="py-4 px-4">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-600 border border-amber-100">
-                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Draft
-                            </span>
-                        </td>
-                        <td class="py-4 px-6 text-center">
-                            <div class="flex items-center justify-center gap-2 text-slate-400">
-                                <button onclick="previewArsip('Draft Perjanjian Kerja Sama Vendor.docx', 'LGL-2023-089', 'Legal', 'Draft', '12 Nov 2023')" class="p-1.5 hover:bg-slate-100 hover:text-blue-600 rounded-lg transition-colors" title="Lihat Pratinjau">
-                                    <span class="material-icons-outlined text-lg">visibility</span>
-                                </button>
-                                <button onclick="downloadArsip('Draft Perjanjian Kerja Sama Vendor.docx')" class="p-1.5 hover:bg-slate-100 hover:text-blue-600 rounded-lg transition-colors" title="Unduh Berkas">
-                                    <span class="material-icons-outlined text-lg">download</span>
-                                </button>
-                                <button onclick="editArsip('Draft Perjanjian Kerja Sama Vendor.docx', 'LGL-2023-089', 'Legal', 'Draft')" class="p-1.5 hover:bg-slate-100 hover:text-blue-600 rounded-lg transition-colors" title="Ubah Metadata">
-                                    <span class="material-icons-outlined text-lg">edit</span>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    {{-- Row 3: Arsip Proyek Gedung Baru 2022.zip --}}
-                    <tr class="hover:bg-slate-50/50 transition-colors arsip-data-row" data-name="Arsip Proyek Gedung Baru 2022.zip" data-no="OPS-2022-ALL" data-category="Operasional" data-status="Archived" data-date="01 Jan 2023">
-                        <td class="py-4 px-6">
-                            <div class="flex items-center gap-3.5">
-                                <span class="material-icons-outlined text-slate-400 text-xl flex-shrink-0">folder_zip</span>
-                                <div>
-                                    <p class="font-bold text-slate-800">Arsip Proyek Gedung Baru 2022.zip</p>
-                                    <p class="text-[11px] text-slate-400">OPS-2022-ALL</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="py-4 px-4">
-                            <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                                Operasional
-                            </span>
-                        </td>
-                        <td class="py-4 px-4 text-slate-600 font-medium">
-                            01 Jan 2023
-                        </td>
-                        <td class="py-4 px-4">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-600 border border-blue-100">
-                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Archived
-                            </span>
-                        </td>
-                        <td class="py-4 px-6 text-center">
-                            <div class="flex items-center justify-center gap-2 text-slate-400">
-                                <button onclick="previewArsip('Arsip Proyek Gedung Baru 2022.zip', 'OPS-2022-ALL', 'Operasional', 'Archived', '01 Jan 2023')" class="p-1.5 hover:bg-slate-100 hover:text-blue-600 rounded-lg transition-colors" title="Lihat Pratinjau">
-                                    <span class="material-icons-outlined text-lg">visibility</span>
-                                </button>
-                                <button onclick="downloadArsip('Arsip Proyek Gedung Baru 2022.zip')" class="p-1.5 hover:bg-slate-100 hover:text-blue-600 rounded-lg transition-colors" title="Unduh Berkas">
-                                    <span class="material-icons-outlined text-lg">download</span>
-                                </button>
-                                <button onclick="editArsip('Arsip Proyek Gedung Baru 2022.zip', 'OPS-2022-ALL', 'Operasional', 'Archived')" class="p-1.5 hover:bg-slate-100 hover:text-blue-600 rounded-lg transition-colors" title="Ubah Metadata">
-                                    <span class="material-icons-outlined text-lg">edit</span>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    {{-- Row 4: Kebijakan Karyawan v2.1.pdf --}}
-                    <tr class="hover:bg-slate-50/50 transition-colors arsip-data-row" data-name="Kebijakan Karyawan v2.1.pdf" data-no="HRD-POL-021" data-category="SDM" data-status="Finalized" data-date="20 Okt 2023">
-                        <td class="py-4 px-6">
-                            <div class="flex items-center gap-3.5">
-                                <span class="material-icons-outlined text-slate-400 text-xl flex-shrink-0">verified_user</span>
-                                <div>
-                                    <p class="font-bold text-slate-800">Kebijakan Karyawan v2.1.pdf</p>
-                                    <p class="text-[11px] text-slate-400">HRD-POL-021</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="py-4 px-4">
-                            <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                                SDM
-                            </span>
-                        </td>
-                        <td class="py-4 px-4 text-slate-600 font-medium">
-                            20 Okt 2023
-                        </td>
-                        <td class="py-4 px-4">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Finalized
-                            </span>
-                        </td>
-                        <td class="py-4 px-6 text-center">
-                            <div class="flex items-center justify-center gap-2 text-slate-400">
-                                <button onclick="previewArsip('Kebijakan Karyawan v2.1.pdf', 'HRD-POL-021', 'SDM', 'Finalized', '20 Okt 2023')" class="p-1.5 hover:bg-slate-100 hover:text-blue-600 rounded-lg transition-colors" title="Lihat Pratinjau">
-                                    <span class="material-icons-outlined text-lg">visibility</span>
-                                </button>
-                                <button onclick="downloadArsip('Kebijakan Karyawan v2.1.pdf')" class="p-1.5 hover:bg-slate-100 hover:text-blue-600 rounded-lg transition-colors" title="Unduh Berkas">
-                                    <span class="material-icons-outlined text-lg">download</span>
-                                </button>
-                                <button onclick="editArsip('Kebijakan Karyawan v2.1.pdf', 'HRD-POL-021', 'SDM', 'Finalized')" class="p-1.5 hover:bg-slate-100 hover:text-blue-600 rounded-lg transition-colors" title="Ubah Metadata">
-                                    <span class="material-icons-outlined text-lg">edit</span>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                    @if (! $archives->count())
+                        <tr>
+                            <td colspan="5" class="py-10 text-center text-xs text-slate-400">Belum ada arsip.</td>
+                        </tr>
+                    @endif
                 </tbody>
             </table>
         </div>
 
         {{-- Pagination Footer matching Image 3 exactly --}}
         <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span id="arsipCountInfo">Menampilkan 1-4 dari 48 dokumen</span>
+            <span id="arsipCountInfo">Menampilkan {{ $archives->firstItem() ?? 0 }}-{{ $archives->lastItem() ?? 0 }} dari {{ $archives->total() }} dokumen</span>
             <div class="flex items-center gap-1" id="arsipPaginationGroup">
-                <button onclick="switchArsipPage(1)" class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-400">&lt;</button>
-                <button onclick="switchArsipPage(1)" id="arsipPage1Btn" class="w-7 h-7 flex items-center justify-center rounded-lg font-bold bg-[#0b1f51] text-white">1</button>
-                <button onclick="switchArsipPage(2)" id="arsipPage2Btn" class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">2</button>
-                <button onclick="switchArsipPage(3)" id="arsipPage3Btn" class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">3</button>
-                <span class="px-1 text-slate-400">...</span>
-                <button onclick="switchArsipPage(12)" id="arsipPage12Btn" class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">12</button>
-                <button onclick="switchArsipPage(2)" class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">&gt;</button>
+                @if ($archives->hasPages())
+                    @if ($archives->onFirstPage())
+                        <span class="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-100 text-slate-300">&lt;</span>
+                    @else
+                        <a href="{{ $archives->previousPageUrl() }}" class="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50">&lt;</a>
+                    @endif
+                    @foreach ($archives->getUrlRange(max(1, $archives->currentPage() - 1), min($archives->lastPage(), $archives->currentPage() + 1)) as $page => $url)
+                        <a href="{{ $url }}" class="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 {{ $page === $archives->currentPage() ? 'bg-[#0b1f51] text-white' : '' }}">{{ $page }}</a>
+                    @endforeach
+                    @if ($archives->hasMorePages())
+                        <a href="{{ $archives->nextPageUrl() }}" class="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50">&gt;</a>
+                    @else
+                        <span class="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-100 text-slate-300">&gt;</span>
+                    @endif
+                @endif
             </div>
         </div>
     </div>
@@ -314,17 +174,18 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Status Awal</label>
                     <select id="newDocStatus" required class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                        <option value="Finalized">Finalized</option>
-                        <option value="Draft">Draft</option>
-                        <option value="Archived">Archived</option>
+                        <option value="menunggu">Menunggu</option>
+                        <option value="disetujui">Disetujui</option>
+                        <option value="ditolak">Ditolak</option>
                     </select>
                 </div>
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Lampiran Berkas (Digital)</label>
-                <div class="border-2 border-dashed border-slate-200 hover:border-blue-400 bg-slate-50/50 rounded-xl p-4 text-center cursor-pointer" onclick="showToast('Memilih lampiran berkas...', 'info')">
+                <div class="border-2 border-dashed border-slate-200 hover:border-blue-400 bg-slate-50/50 rounded-xl p-4 text-center cursor-pointer" onclick="document.getElementById('newDocFile').click()">
+                    <input type="file" id="newDocFile" class="hidden" accept=".pdf,.doc,.docx,.zip,.xls,.xlsx" onchange="document.getElementById('newDocFileName').textContent = this.files[0]?.name || 'Pilih berkas digital untuk diarsipkan'">
                     <span class="material-icons-outlined text-2xl text-slate-300">attach_file</span>
-                    <p class="text-xs font-semibold text-slate-600 mt-1">Pilih berkas digital untuk diarsipkan</p>
+                    <p id="newDocFileName" class="text-xs font-semibold text-slate-600 mt-1">Pilih berkas digital untuk diarsipkan</p>
                 </div>
             </div>
             <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
@@ -511,26 +372,33 @@
         const name = document.getElementById('newDocName').value.trim();
         const no = document.getElementById('newDocNo').value.trim();
         const cat = document.getElementById('newDocCategory').value;
-        const dateRaw = document.getElementById('newDocDate').value;
-        const status = document.getElementById('newDocStatus').value;
+        const file = document.getElementById('newDocFile').files[0];
+        if (!file) {
+            showToast('Pilih berkas sebelum menyimpan arsip.', 'error');
+            return;
+        }
 
-        const dateFormatted = new Date(dateRaw).toLocaleDateString('id-ID', {
-            day: 'numeric', month: 'short', year: 'numeric'
-        });
+        const payload = new FormData();
+        payload.append('document', file);
+        payload.append('title', name);
+        payload.append('category_id', cat);
+        payload.append('status', 'menunggu');
 
-        appendNewArsipRow({
-            name: name,
-            no: no,
-            category: cat,
-            date: dateFormatted,
-            status: status
-        });
-
-        closeCreateArsipModal();
-        document.getElementById('newDocName').value = '';
-        document.getElementById('newDocNo').value = '';
-
-        showToast(`Arsip "${name}" berhasil ditambahkan!`, 'success');
+        fetch(@js($uploadRoute), {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            },
+            body: payload,
+        }).then(response => {
+            if (!response.ok) throw new Error('Arsip gagal disimpan.');
+            return response;
+        }).then(() => {
+            closeCreateArsipModal();
+            showToast(`Arsip "${name}" berhasil dikirim untuk persetujuan.`, 'success');
+            setTimeout(() => window.location.reload(), 700);
+        }).catch(error => showToast(error.message, 'error'));
     }
 
     // Append helper
@@ -538,6 +406,7 @@
         const tbody = document.getElementById('arsipTableBody');
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50/50 transition-colors arsip-data-row bg-blue-50/20';
+        tr.dataset.id = data.id || '';
         tr.dataset.name = data.name;
         tr.dataset.no = data.no;
         tr.dataset.category = data.category;
@@ -545,10 +414,12 @@
         tr.dataset.date = data.date;
 
         let statusBadge = '';
-        if (data.status === 'Finalized') {
+        if (data.status === 'Finalized' || data.status === 'disetujui') {
             statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Finalized</span>`;
-        } else if (data.status === 'Draft') {
+        } else if (data.status === 'Draft' || data.status === 'menunggu') {
             statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-600 border border-amber-100"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Draft</span>`;
+        } else if (data.status === 'ditolak') {
+            statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-600 border border-rose-100"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Ditolak</span>`;
         } else {
             statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-600 border border-blue-100"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Archived</span>`;
         }
@@ -650,22 +521,18 @@
 
     // Download file
     function downloadArsip(name) {
-        showToast(`Memulai unduhan berkas: "${name}"...`, 'info');
-        setTimeout(() => {
-            showToast(`Berkas "${name}" berhasil diunduh.`, 'success');
-        }, 1200);
+        const row = [...document.querySelectorAll('.arsip-data-row')].find(item => item.dataset.name === name);
+        const archiveId = row?.dataset.id;
+        if (!archiveId) {
+            showToast('Berkas demo belum tersimpan di sistem.', 'error');
+            return;
+        }
+        window.location.href = `/archives/${archiveId}/download`;
     }
 
     // Export Documents
     function handleExportDocuments() {
-        const type = prompt("Pilih format ekspor berkas arsip:\n1. Excel Spreadsheet (.XLSX)\n2. PDF Report (.PDF)\n3. Comma Separated (.CSV)\n\nKetik nomor pilihan:", "1");
-        if (type === '1') {
-            showToast("Mengekspor seluruh arsip ke SIMARSIP-Katalog.xlsx...", "success");
-        } else if (type === '2') {
-            showToast("Membuat berkas laporan resmi SIMARSIP-Katalog.pdf...", "success");
-        } else if (type === '3') {
-            showToast("Mengekspor data ke format CSV...", "success");
-        }
+        window.location.href = "{{ route('archives.export') }}";
     }
 
     // Pagination
@@ -685,6 +552,18 @@
 
     // Parse URL params for pre-filled search
     document.addEventListener('DOMContentLoaded', () => {
+        const persistedArchives = @json($archiveRows);
+        document.querySelectorAll('.arsip-data-row').forEach(row => row.remove());
+        if (persistedArchives.length) {
+            persistedArchives.forEach(archive => appendNewArsipRow({
+                id: archive.id,
+                name: archive.name,
+                no: `ARS-${String(archive.id).padStart(6, '0')}`,
+                category: archive.category,
+                date: archive.date,
+                status: archive.status,
+            }));
+        }
         const urlParams = new URLSearchParams(window.location.search);
         const searchQ = urlParams.get('search');
         if (searchQ) {

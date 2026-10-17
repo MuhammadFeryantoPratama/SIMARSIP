@@ -36,7 +36,7 @@
             </div>
             <div class="mt-4">
                 <p class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Total Arsip Terverifikasi</p>
-                <h3 class="text-2xl font-black text-slate-800 tracking-tight mt-0.5" id="statVerified">12,482</h3>
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight mt-0.5" id="statVerified">{{ number_format($approvedArchiveCount, 0, ',', '.') }}</h3>
             </div>
         </div>
 
@@ -47,12 +47,12 @@
                     <span class="material-icons-outlined text-xl">assignment</span>
                 </div>
                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-600 border border-amber-100">
-                    42 Antrian
+                    {{ number_format($pendingArchiveCount, 0, ',', '.') }} Antrian
                 </span>
             </div>
             <div class="mt-4">
                 <p class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Menunggu Review</p>
-                <h3 class="text-2xl font-black text-slate-800 tracking-tight mt-0.5" id="statPendingReview">156</h3>
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight mt-0.5" id="statPendingReview">{{ number_format($pendingArchiveCount, 0, ',', '.') }}</h3>
             </div>
         </div>
 
@@ -68,7 +68,7 @@
             </div>
             <div class="mt-4">
                 <p class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Ketidaksesuaian Arsip</p>
-                <h3 class="text-2xl font-black text-red-600 tracking-tight mt-0.5" id="statNonCompliant">08</h3>
+                <h3 class="text-2xl font-black text-red-600 tracking-tight mt-0.5" id="statNonCompliant">{{ number_format($rejectedArchiveCount, 0, ',', '.') }}</h3>
             </div>
         </div>
 
@@ -84,7 +84,7 @@
             </div>
             <div class="mt-4">
                 <p class="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Aktivitas Audit (24 Jam)</p>
-                <h3 class="text-2xl font-black text-slate-800 tracking-tight mt-0.5" id="statActivity">3,124</h3>
+                <h3 class="text-2xl font-black text-slate-800 tracking-tight mt-0.5" id="statActivity">{{ number_format($recentArchives->count(), 0, ',', '.') }}</h3>
             </div>
         </div>
     </div>
@@ -369,10 +369,7 @@
 <script>
     // --- Export & Filters ---
     function handleExportAudit() {
-        showToast('Mengekspor laporan audit ke PDF...', 'info');
-        setTimeout(() => {
-            showToast('Laporan audit berhasil diekspor: Audit-Report-Q4-2023.pdf', 'success');
-        }, 1500);
+        window.location.href = "{{ route('archives.export') }}";
     }
     function handleFilterPeriode() {
         showToast('Filter periode: 7 hari terakhir diterapkan', 'info');
@@ -398,7 +395,12 @@
     function closeDetailModal() { document.getElementById('detailModal').classList.remove('active'); }
     function handleDownloadAuditReport() {
         const no = document.getElementById('detailDocNo').textContent;
-        showToast(`Mengunduh laporan audit ${no}...`, 'success');
+        const archive = [...document.querySelectorAll('[data-archive-no]')].find(row => row.dataset.archiveNo === no);
+        if (!archive?.dataset.archiveId) {
+            showToast('Berkas audit belum memiliki arsip tersimpan.', 'error');
+            return;
+        }
+        window.location.href = `/archives/${archive.dataset.archiveId}/download`;
         closeDetailModal();
     }
 
@@ -514,5 +516,20 @@
 
     window.addEventListener('load', drawAuditChart);
     window.addEventListener('resize', drawAuditChart);
+    document.addEventListener('DOMContentLoaded', () => {
+        const archives = @json($recentArchiveRows);
+        const body = document.getElementById('verifTable');
+        if (!body) return;
+        body.innerHTML = archives.length ? archives.map(archive => {
+            const label = archive.status === 'disetujui' ? 'Verified' : archive.status === 'ditolak' ? 'Incomplete' : 'Pending Review';
+            const tone = archive.status === 'disetujui' ? 'emerald' : archive.status === 'ditolak' ? 'red' : 'amber';
+            const action = archive.status === 'menunggu' ? `showReviewModal('ARS-${String(archive.id).padStart(6, '0')}', '${escapeHtml(archive.name)}', 'Arsip Digital', '${archive.date}')` : `showDetailModal('ARS-${String(archive.id).padStart(6, '0')}', '${escapeHtml(archive.name)}', 'Arsip Digital', '${archive.date}', '${label}')`;
+            return `<tr class="hover:bg-slate-50/50 transition-colors" data-archive-id="${archive.id}" data-archive-no="ARS-${String(archive.id).padStart(6, '0')}"><td class="py-4 px-6"><span class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200 font-mono">ARS-${String(archive.id).padStart(6, '0')}</span></td><td class="py-4 px-4"><p class="font-bold text-slate-800">${escapeHtml(archive.name)}</p><p class="text-[11px] text-slate-400">Arsip Digital</p></td><td class="py-4 px-4 text-slate-500 font-medium">${archive.date}</td><td class="py-4 px-4"><span class="px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider bg-${tone}-50 text-${tone}-600 border border-${tone}-100 uppercase">${label}</span></td><td class="py-4 px-6 text-center"><button onclick="${action}" class="text-blue-600 hover:text-blue-800 font-bold text-xs hover:underline transition-colors">${archive.status === 'menunggu' ? 'Review' : 'Detail'}</button></td></tr>`;
+        }).join('') : '<tr><td colspan="5" class="py-10 text-center text-xs text-slate-400">Belum ada arsip.</td></tr>';
+    });
+
+    function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]));
+    }
 </script>
 @endpush

@@ -96,7 +96,7 @@
                         <span>Persetujuan</span>
                     </div>
                     <span class="px-1.5 py-0.5 rounded-full text-[10px] font-black {{ request()->routeIs('pimpinan.persetujuan') ? 'bg-red-500 text-white' : 'bg-red-500 text-white' }}" id="sidebarBadgeCount">
-                        12
+                        {{ $pendingArchiveCount ?? \App\Models\DataArsip::query()->where('status', 'menunggu')->count() }}
                     </span>
                 </a>
 
@@ -156,16 +156,16 @@
                                 <span>JK</span>
                             </div>
                             <div class="hidden md:block">
-                                <p class="text-xs font-bold text-slate-800 leading-tight">Jokowoy</p>
-                                <p class="text-[9.5px] text-slate-400 leading-tight truncate max-w-[170px]">Ultimate Supreme Leader Corruption Final Boss</p>
+                                <p class="text-xs font-bold text-slate-800 leading-tight">{{ auth()->user()->name }}</p>
+                                <p class="text-[9.5px] text-slate-400 leading-tight truncate max-w-[170px]">{{ auth()->user()->role?->name }}</p>
                             </div>
                         </button>
 
                         <div id="profileDropdown" class="dropdown-menu">
                             <div class="p-2">
                                 <div class="px-3 py-2 border-b border-slate-100 mb-1">
-                                    <p class="text-xs font-bold text-slate-800">Jokowoy</p>
-                                    <p class="text-[10px] text-slate-400">pimpinan@simarsip.go.id</p>
+                                    <p class="text-xs font-bold text-slate-800">{{ auth()->user()->name }}</p>
+                                    <p class="text-[10px] text-slate-400">{{ auth()->user()->email }}</p>
                                 </div>
                                 <button onclick="showToast('Beralih ke Dashboard Pimpinan', 'info'); toggleProfileDropdown();" class="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-all text-left">
                                     <span class="material-icons-outlined text-base">dashboard</span> Dashboard Pimpinan
@@ -192,6 +192,7 @@
             {{-- Main Content Scrollable Area --}}
             <main class="flex-1 overflow-y-auto custom-scroll p-8">
                 @yield('content')
+                @include('components.flash')
             </main>
         </div>
     </div>
@@ -283,7 +284,13 @@
         }
         function handleLogout() {
             if (confirm('Keluar dari sesi Pimpinan?')) {
-                window.location.href = "{{ route('login') }}";
+                fetch("{{ route('logout') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                    },
+                }).then(() => { window.location.href = "{{ route('login') }}"; });
             }
         }
         function showToast(message, type = 'info') {

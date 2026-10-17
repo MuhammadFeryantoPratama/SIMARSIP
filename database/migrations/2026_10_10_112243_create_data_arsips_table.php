@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('data_arsips', function (Blueprint $table) {
             $table->id();
+            $table->string('title')->nullable();
             $table->string('document_path');
             $table->enum('status', ['menunggu', 'disetujui', 'ditolak'])->default('menunggu');
             $table->timestamps();
