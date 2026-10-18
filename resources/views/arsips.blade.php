@@ -151,11 +151,7 @@
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nama Dokumen Lengkap</label>
                 <input type="text" id="newDocName" required placeholder="Contoh: Rencana Strategis Tahunan 2024.pdf" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
             </div>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nomor Arsip</label>
-                    <input type="text" id="newDocNo" required placeholder="REN-2024-001" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                </div>
+            <div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Kategori</label>
                     <select id="newDocCategory" required class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
@@ -392,7 +388,6 @@
     function handleCreateArsipSubmit(e) {
         e.preventDefault();
         const name = document.getElementById('newDocName').value.trim();
-        const no = document.getElementById('newDocNo').value.trim();
         const cat = document.getElementById('newDocCategory').value;
         const file = document.getElementById('newDocFile').files[0];
         if (!file) {
@@ -437,6 +432,7 @@
         tr.dataset.name = data.name;
         tr.dataset.no = data.no;
         tr.dataset.category = data.category;
+        tr.dataset.categoryId = data.categoryId || '';
         tr.dataset.status = data.status;
         tr.dataset.date = data.date;
         tr.dataset.canDelete = data.canDelete ? 'true' : 'false';
@@ -481,9 +477,11 @@
                     <button onclick="downloadArsip('${safeName}')" class="p-1.5 hover:bg-slate-100 hover:text-blue-600 rounded-lg transition-colors" title="Unduh Berkas">
                         <span class="material-icons-outlined text-lg">download</span>
                     </button>
-                    <button onclick="editArsip('${safeName}', '${safeNo}', '${safeCategory}', '${safeStatus}')" class="p-1.5 hover:bg-slate-100 hover:text-blue-600 rounded-lg transition-colors" title="Ubah Metadata">
-                        <span class="material-icons-outlined text-lg">edit</span>
-                    </button>
+                    ${data.canEdit ? `
+                        <button onclick="editArsip('${safeName}', '${safeNo}', '${safeCategory}', '${data.categoryId}', '${safeStatus}', ${data.canChangeStatus})" class="p-1.5 hover:bg-slate-100 hover:text-blue-600 rounded-lg transition-colors" title="Ubah Metadata">
+                            <span class="material-icons-outlined text-lg">edit</span>
+                        </button>
+                    ` : ''}
                     ${data.canDelete ? `
                         <button onclick="confirmDeleteArsip('${data.id}', '${safeName}', '${safeNo}')" class="p-1.5 hover:bg-rose-50 hover:text-rose-600 rounded-lg transition-colors text-slate-400" title="Hapus Berkas">
                             <span class="material-icons-outlined text-lg">delete_outline</span>
@@ -511,11 +509,12 @@
     }
 
     // Modal: Edit Arsip
-    function editArsip(name, no, category, status) {
+    function editArsip(name, no, category, categoryId, status, canChangeStatus) {
         document.getElementById('editDocName').value = name;
         document.getElementById('editDocNo').value = no;
-        document.getElementById('editDocCategory').value = category;
+        document.getElementById('editDocCategory').value = categoryId;
         document.getElementById('editDocStatus').value = status;
+        document.getElementById('editDocStatus').disabled = !canChangeStatus;
 
         // find matching row
         document.querySelectorAll('.arsip-data-row').forEach(row => {
@@ -530,32 +529,38 @@
 
     function handleEditArsipSubmit(e) {
         e.preventDefault();
+        if (!activeEditRow) return;
+
         const newName = document.getElementById('editDocName').value.trim();
         const newCat = document.getElementById('editDocCategory').value;
         const newStat = document.getElementById('editDocStatus').value;
+        const payload = {
+            title: newName,
+            category_id: newCat,
+        };
 
-        if (activeEditRow) {
-            activeEditRow.dataset.name = newName;
-            activeEditRow.dataset.category = newCat;
-            activeEditRow.dataset.status = newStat;
-
-            activeEditRow.querySelector('td:nth-child(1) p.font-bold').textContent = newName;
-            activeEditRow.querySelector('td:nth-child(2) span').textContent = newCat;
-
-            const statCell = activeEditRow.querySelector('td:nth-child(4)');
-            if (newStat === 'disetujui') {
-                statCell.innerHTML = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Disetujui</span>`;
-            } else if (newStat === 'menunggu') {
-                statCell.innerHTML = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-600 border border-amber-100"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Menunggu</span>`;
-            } else if (newStat === 'ditolak') {
-                statCell.innerHTML = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-600 border border-rose-100"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Ditolak</span>`;
-            } else {
-                statCell.innerHTML = '';
-            }
+        if (!document.getElementById('editDocStatus').disabled) {
+            payload.status = newStat;
         }
 
-        closeEditArsipModal();
-        showToast(`Metadata berkas "${newName}" berhasil diperbarui!`, 'success');
+        fetch(`/archives/${activeEditRow.dataset.id}`, {
+            method: 'PATCH',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        }).then(async response => {
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || 'Metadata arsip gagal diperbarui.');
+            }
+
+            closeEditArsipModal();
+            showToast(`Metadata berkas "${newName}" berhasil diperbarui.`, 'success');
+            setTimeout(() => window.location.reload(), 700);
+        }).catch(error => showToast(error.message, 'error'));
     }
 
     // Modal: Hapus Arsip
@@ -661,9 +666,12 @@
                 name: archive.name,
                 no: `ARS-${String(archive.id).padStart(6, '0')}`,
                 category: archive.category,
+                categoryId: archive.categoryId,
                 date: archive.date,
                 status: archive.status,
                 canDelete: archive.canDelete,
+                canEdit: archive.canEdit,
+                canChangeStatus: archive.canChangeStatus,
             }));
         }
         const urlParams = new URLSearchParams(window.location.search);

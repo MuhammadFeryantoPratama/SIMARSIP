@@ -175,6 +175,21 @@ it('allows administrators to create, update, download, export, and delete archiv
         ->assertRedirect();
     expect($archive->fresh()->status)->toBe('ditolak');
 
+    $updatedCategory = Category::create(['name' => 'Legal']);
+    $this->actingAs($admin)
+        ->patchJson(route('archives.update', $archive), [
+            'title' => 'Laporan Tahunan Diperbarui',
+            'category_id' => $updatedCategory->id,
+            'status' => 'disetujui',
+        ])
+        ->assertOk();
+    expect($archive->fresh()->only(['title', 'category_id', 'status']))
+        ->toMatchArray([
+            'title' => 'Laporan Tahunan Diperbarui',
+            'category_id' => $updatedCategory->id,
+            'status' => 'disetujui',
+        ]);
+
     $this->actingAs($admin)
         ->get(route('archives.download', $archive))
         ->assertOk()

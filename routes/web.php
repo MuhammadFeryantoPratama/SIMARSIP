@@ -38,6 +38,8 @@ Route::middleware('auth')->get('/archives/{dataArsip}/download', [AdminControlle
     ->name('archives.download');
 Route::middleware('auth')->get('/archives/export', [AdminController::class, 'exportArchives'])
     ->name('archives.export');
+Route::middleware('auth')->patch('/archives/{dataArsip}', [ArchiveController::class, 'update'])
+    ->name('archives.update');
 Route::middleware('auth')->delete('/archives/{dataArsip}', [ArchiveController::class, 'destroy'])
     ->name('archives.destroy');
 
