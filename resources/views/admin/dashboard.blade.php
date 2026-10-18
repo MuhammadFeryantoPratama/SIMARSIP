@@ -121,109 +121,70 @@
                                 <th class="py-3 px-6 text-right">AKSI</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100 text-xs" id="userTableBody">
-                            {{-- Row 1: Agus Setiawan --}}
-                            <tr class="hover:bg-slate-50/50 transition-colors">
-                                <td class="py-3.5 px-6">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center flex-shrink-0">
-                                            AS
+                        <tbody class="divide-y divide-slate-100 text-xs">
+                            @forelse ($users as $user)
+                                @php
+                                    $initials = collect(explode(' ', $user->name))
+                                        ->map(fn (string $part): string => substr($part, 0, 1))
+                                        ->take(2)
+                                        ->implode('');
+                                @endphp
+                                <tr class="hover:bg-slate-50/50 transition-colors">
+                                    <td class="py-3.5 px-6">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center shrink-0">
+                                                {{ $initials }}
+                                            </div>
+                                            <div>
+                                                <p class="font-bold text-slate-800">{{ $user->name }}</p>
+                                                <p class="text-[11px] text-slate-400">NIP. {{ $user->username }}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p class="font-bold text-slate-800">Agus Setiawan</p>
-                                            <p class="text-[11px] text-slate-400">NIP. 198205122010121004</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="py-3.5 px-4">
-                                    <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                                        Editor Arsip
-                                    </span>
-                                </td>
-                                <td class="py-3.5 px-4">
-                                    <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Aktif
-                                    </span>
-                                </td>
-                                <td class="py-3.5 px-6 text-right">
-                                    <button onclick="handleUserRowAction('Agus Setiawan')" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600" title="Kelola Akun">
-                                        <span class="material-icons-outlined text-base">more_horiz</span>
-                                    </button>
-                                </td>
-                            </tr>
-
-                            {{-- Row 2: Budi Pratama --}}
-                            <tr class="hover:bg-slate-50/50 transition-colors">
-                                <td class="py-3.5 px-6">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center flex-shrink-0">
-                                            BP
-                                        </div>
-                                        <div>
-                                            <p class="font-bold text-slate-800">Budi Pratama</p>
-                                            <p class="text-[11px] text-slate-400">NIP. 199003222015031002</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="py-3.5 px-4">
-                                    <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                                        Viewer
-                                    </span>
-                                </td>
-                                <td class="py-3.5 px-4">
-                                    <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Aktif
-                                    </span>
-                                </td>
-                                <td class="py-3.5 px-6 text-right">
-                                    <button onclick="handleUserRowAction('Budi Pratama')" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600" title="Kelola Akun">
-                                        <span class="material-icons-outlined text-base">more_horiz</span>
-                                    </button>
-                                </td>
-                            </tr>
-
-                            {{-- Row 3: Siti Nurhaliza --}}
-                            <tr class="hover:bg-slate-50/50 transition-colors">
-                                <td class="py-3.5 px-6">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-600 font-bold text-xs flex items-center justify-center flex-shrink-0">
-                                            SN
-                                        </div>
-                                        <div>
-                                            <p class="font-bold text-slate-800">Siti Nurhaliza</p>
-                                            <p class="text-[11px] text-slate-400">NIP. 198501102012012001</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="py-3.5 px-4">
-                                    <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                                        Validator
-                                    </span>
-                                </td>
-                                <td class="py-3.5 px-4">
-                                    <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Nonaktif
-                                    </span>
-                                </td>
-                                <td class="py-3.5 px-6 text-right">
-                                    <button onclick="handleUserRowAction('Siti Nurhaliza')" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600" title="Kelola Akun">
-                                        <span class="material-icons-outlined text-base">more_horiz</span>
-                                    </button>
-                                </td>
-                            </tr>
+                                    </td>
+                                    <td class="py-3.5 px-4">
+                                        <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                                            {{ $user->role?->name ?? 'Tanpa Peran' }}
+                                        </span>
+                                    </td>
+                                    <td class="py-3.5 px-4">
+                                        <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Aktif
+                                        </span>
+                                    </td>
+                                    <td class="py-3.5 px-6 text-right">
+                                        <button onclick="showUserActionModal({{ $user->id }}, @js($user->name))" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600" title="Kelola Akun">
+                                            <span class="material-icons-outlined text-base">more_horiz</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="px-6 py-8 text-center text-slate-400">Belum ada pengguna.</td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
 
                 {{-- Table Footer & Pagination matching Image 2 --}}
                 <div class="px-6 py-3.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                    <span id="userPaginationInfo">Menampilkan 3 dari 1,248 user</span>
-                    <div class="flex items-center gap-1" id="userPaginationGroup">
-                        <button onclick="switchUserPage(1)" class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-400">&lt;</button>
-                        <button onclick="switchUserPage(1)" id="userPage1Btn" class="w-7 h-7 flex items-center justify-center rounded-lg font-bold bg-[#0b1f51] text-white">1</button>
-                        <button onclick="switchUserPage(2)" id="userPage2Btn" class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">2</button>
-                        <button onclick="switchUserPage(3)" id="userPage3Btn" class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">3</button>
-                        <button onclick="switchUserPage(2)" class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">&gt;</button>
+                    <span>
+                        Menampilkan {{ $users->firstItem() ?? 0 }}-{{ $users->lastItem() ?? 0 }} dari {{ number_format($users->total()) }} user
+                    </span>
+                    <div class="flex items-center gap-1">
+                        @if ($users->onFirstPage())
+                            <span class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 text-slate-300">&lt;</span>
+                        @else
+                            <a href="{{ $users->previousPageUrl() }}" class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">&lt;</a>
+                        @endif
+                        @foreach ($users->getUrlRange(max(1, $users->currentPage() - 1), min($users->lastPage(), $users->currentPage() + 1)) as $page => $url)
+                            <a href="{{ $url }}" class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 {{ $page === $users->currentPage() ? 'font-bold bg-[#0b1f51] text-white border-[#0b1f51]' : 'text-slate-600' }}">{{ $page }}</a>
+                        @endforeach
+                        @if ($users->hasMorePages())
+                            <a href="{{ $users->nextPageUrl() }}" class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600">&gt;</a>
+                        @else
+                            <span class="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 text-slate-300">&gt;</span>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -395,9 +356,7 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Peran (Role)</label>
                     <select id="newUserRole" required class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                        <option value="Editor Arsip">Editor Arsip</option>
-                        <option value="Viewer">Viewer</option>
-                        <option value="Validator">Validator</option>
+                        <option value="Staff">Staff</option>
                         <option value="Auditor">Auditor</option>
                     </select>
                 </div>
@@ -418,6 +377,43 @@
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
+{{-- Modal: Aksi Pengguna --}}
+<div id="userActionModal" class="modal-overlay" onclick="if(event.target===this)closeUserActionModal()">
+    <div class="modal-content max-w-md w-full p-6">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+                <h3 class="text-base font-bold text-slate-800">Kelola Akun</h3>
+                <p id="userActionName" class="text-xs text-slate-400 mt-0.5"></p>
+            </div>
+            <button onclick="closeUserActionModal()" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400">
+                <span class="material-icons-outlined text-xl">close</span>
+            </button>
+        </div>
+        <div class="mt-4 space-y-3">
+            <form onsubmit="handlePasswordReset(event)" class="space-y-3">
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Reset Kata Sandi</label>
+                <div class="flex gap-2">
+                    <input type="password" id="userNewPassword" minlength="8" required placeholder="Minimal 8 karakter" class="min-w-0 flex-1 px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    <button type="submit" class="px-4 py-2 bg-[#0b1f51] hover:bg-[#122b6c] text-white rounded-xl text-xs font-bold transition-all">Simpan</button>
+                </div>
+            </form>
+            <div class="pt-3 border-t border-slate-100">
+                <p class="text-xs text-slate-500 mb-2">Menghapus akun akan menghilangkan akses pengguna ke sistem.</p>
+                <button onclick="handleUserDelete()" class="w-full px-4 py-2.5 border border-red-200 text-red-600 hover:bg-red-50 rounded-xl text-xs font-bold transition-all">
+                    Hapus Akun
+                </button>
+                <div id="userDeleteConfirmation" class="hidden mt-3 p-3 rounded-xl bg-red-50 border border-red-100">
+                    <p class="text-xs text-red-700">Hapus akun <strong id="userDeleteConfirmationName"></strong>?</p>
+                    <div class="flex justify-end gap-2 mt-3">
+                        <button onclick="document.getElementById('userDeleteConfirmation').classList.add('hidden')" class="px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-white rounded-lg">Batal</button>
+                        <button onclick="confirmUserDelete()" class="px-3 py-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg">Ya, Hapus</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -599,14 +595,27 @@
         }).catch(error => showToast(error.message, 'error'));
     }
 
-    // User Row Action
-    function handleUserRowAction(userId, userName) {
-        const action = prompt(`Pilihan aksi untuk ${userName}:\n1. Reset Kata Sandi\n2. Hapus Akun\n\nKetik nomor aksi:`, '1');
-        if (action === '1') {
-            const password = prompt('Masukkan kata sandi baru (minimal 8 karakter):');
-            if (!password) return;
+    let selectedUser = { id: null, name: '' };
 
-            fetch(`/admin/users/${userId}/password`, {
+    function showUserActionModal(userId, userName) {
+        selectedUser = { id: userId, name: userName };
+        document.getElementById('userActionName').textContent = userName;
+        document.getElementById('userNewPassword').value = '';
+        document.getElementById('userActionModal').classList.add('active');
+    }
+
+    function closeUserActionModal() {
+        document.getElementById('userActionModal').classList.remove('active');
+        selectedUser = { id: null, name: '' };
+    }
+
+    async function handlePasswordReset(event) {
+        event.preventDefault();
+        const password = document.getElementById('userNewPassword').value;
+        const userName = selectedUser.name;
+
+        try {
+            const response = await fetch(`/admin/users/${selectedUser.id}/password`, {
                 method: 'PATCH',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -614,38 +623,41 @@
                     'Accept': 'application/json',
                 },
                 body: JSON.stringify({ password }),
-            }).then(response => {
-                if (!response.ok) throw new Error('Kata sandi gagal direset.');
-                showToast(`Kata sandi ${userName} berhasil direset.`, 'success');
-            }).catch(error => showToast(error.message, 'error'));
-        } else if (action === '2' && confirm(`Yakin ingin menghapus akun ${userName}?`)) {
-            fetch(`/admin/users/${userId}`, {
+            });
+            if (!response.ok) throw new Error('Kata sandi gagal direset.');
+            closeUserActionModal();
+            showToast(`Kata sandi ${userName} berhasil direset.`, 'success');
+        } catch (error) {
+            showToast(error.message, 'error');
+        }
+    }
+
+    function handleUserDelete() {
+        if (!selectedUser.id) return;
+        const userName = selectedUser.name;
+
+        document.getElementById('userDeleteConfirmation').classList.remove('hidden');
+        document.getElementById('userDeleteConfirmationName').textContent = userName;
+    }
+
+    async function confirmUserDelete() {
+        const userName = selectedUser.name;
+
+        try {
+            const response = await fetch(`/admin/users/${selectedUser.id}`, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                     'Accept': 'application/json',
                 },
-            }).then(response => {
-                if (!response.ok) throw new Error('Akun gagal dihapus.');
-                showToast(`Akun ${userName} berhasil dihapus.`, 'success');
-                setTimeout(() => window.location.reload(), 700);
-            }).catch(error => showToast(error.message, 'error'));
+            });
+            if (!response.ok) throw new Error('Akun gagal dihapus.');
+            closeUserActionModal();
+            showToast(`Akun ${userName} berhasil dihapus.`, 'success');
+            setTimeout(() => window.location.reload(), 700);
+        } catch (error) {
+            showToast(error.message, 'error');
         }
-    }
-
-    // User Table Pagination demo
-    function switchUserPage(pageNo) {
-        document.querySelectorAll('#userPaginationGroup button').forEach(b => {
-            if (b.id && b.id.startsWith('userPage')) {
-                b.className = 'w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600';
-            }
-        });
-        const activeBtn = document.getElementById(`userPage${pageNo}Btn`);
-        if (activeBtn) {
-            activeBtn.className = 'w-7 h-7 flex items-center justify-center rounded-lg font-bold bg-[#0b1f51] text-white';
-        }
-        document.getElementById('userPaginationInfo').textContent = `Menampilkan ${pageNo * 3 - 2}-${pageNo * 3} dari 1,248 user`;
-        showToast(`Memuat data pengguna halaman ${pageNo}...`, 'info');
     }
 
     // Modal: Input Data Massal
@@ -718,45 +730,5 @@
         }, 1500);
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const users = @json($userRows);
-
-        const userTableBody = document.getElementById('userTableBody');
-        if (userTableBody && users.length) {
-            userTableBody.innerHTML = users.map(user => `
-                <tr class="hover:bg-slate-50/50 transition-colors">
-                    <td class="py-3.5 px-6">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center flex-shrink-0">${user.initials}</div>
-                            <div>
-                                <p class="font-bold text-slate-800">${escapeHtml(user.name)}</p>
-                                <p class="text-[11px] text-slate-400">NIP. ${escapeHtml(user.username)}</p>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="py-3.5 px-4"><span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">${escapeHtml(user.role)}</span></td>
-                    <td class="py-3.5 px-4"><span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Aktif</span></td>
-                    <td class="py-3.5 px-6 text-right"><button onclick="handleUserRowAction(${user.id}, '${escapeJs(user.name)}')" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600" title="Kelola Akun"><span class="material-icons-outlined text-base">more_horiz</span></button></td>
-                </tr>
-            `).join('');
-        }
-
-        const totalUsers = document.getElementById('statTotalUsers');
-        if (totalUsers) totalUsers.textContent = users.length.toLocaleString('id-ID');
-        const newDocs = document.getElementById('statNewDocs');
-        if (newDocs) newDocs.textContent = @json($archiveCount);
-        const pending = document.getElementById('statPendingAccess');
-        if (pending) pending.textContent = @json($pendingArchiveCount);
-    });
-
-    function escapeHtml(value) {
-        return String(value).replace(/[&<>"']/g, character => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
-        }[character]));
-    }
-
-    function escapeJs(value) {
-        return String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-    }
 </script>
 @endpush

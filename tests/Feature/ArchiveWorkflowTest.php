@@ -249,6 +249,19 @@ it('allows administrators to manage roles, users, and passwords', function (): v
     expect(User::query()->whereKey($createdUser->id)->exists())->toBeFalse();
 });
 
+it('paginates users on the admin dashboard', function (): void {
+    $adminRole = Role::create(['name' => 'Admin', 'description' => 'Admin']);
+    $admin = User::factory()->create(['role_id' => $adminRole->id]);
+    User::factory()->count(6)->create(['role_id' => $adminRole->id]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.dashboard', ['page' => 2]))
+        ->assertOk()
+        ->assertViewHas('users', fn ($users): bool => $users->currentPage() === 2
+            && $users->perPage() === 5
+            && $users->total() === 7);
+});
+
 it('protects role-specific pages and renders the shared archive view for allowed roles', function (): void {
     $roles = [
         ['Staff', 'staff.arsip'],

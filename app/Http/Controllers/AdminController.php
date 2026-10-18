@@ -34,15 +34,12 @@ class AdminController extends Controller
             'newArchiveCount' => $archives->where('created_at', '>=', now()->startOfDay())->count(),
             'activeUserCount' => User::query()->where('updated_at', '>=', now()->startOfDay())->count(),
             'storageUsageBytes' => $storageUsageBytes,
-            'users' => User::query()->with('role')->latest()->get(),
+            'users' => User::query()
+                ->with('role')
+                ->latest()
+                ->paginate(5)
+                ->withQueryString(),
             'categories' => Category::query()->orderBy('name')->get(),
-            'userRows' => User::query()->with('role')->latest()->get()->map(fn (User $user): array => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'username' => $user->username,
-                'role' => $user->role?->name ?? 'Tanpa Peran',
-                'initials' => collect(explode(' ', $user->name))->map(fn (string $part): string => substr($part, 0, 1))->take(2)->implode(''),
-            ])->values(),
         ]);
     }
 
@@ -220,11 +217,15 @@ class AdminController extends Controller
         return response()->json(['message' => 'Kata sandi berhasil direset.']);
     }
 
-    public function destroyUser(User $user): RedirectResponse
+    public function destroyUser(Request $request, User $user): RedirectResponse|JsonResponse
     {
         abort_if(auth()->id() === $user->id, 422, 'Akun yang sedang digunakan tidak dapat dihapus.');
 
         $user->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Akun berhasil dihapus.']);
+        }
 
         return back()->with('success', 'Akun berhasil dihapus.');
     }
