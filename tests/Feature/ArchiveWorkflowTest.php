@@ -262,6 +262,21 @@ it('paginates users on the admin dashboard', function (): void {
             && $users->total() === 7);
 });
 
+it('shows the pending archive count and enum statuses on the archive page', function (): void {
+    $pimpinanRole = Role::create(['name' => 'Pimpinan', 'description' => 'Pimpinan']);
+    $pimpinan = User::factory()->create(['role_id' => $pimpinanRole->id]);
+    DataArsip::create(['document_path' => 'archives/pending.pdf', 'status' => 'menunggu']);
+    DataArsip::create(['document_path' => 'archives/approved.pdf', 'status' => 'disetujui']);
+
+    $this->actingAs($pimpinan)
+        ->get(route('pimpinan.arsip'))
+        ->assertOk()
+        ->assertViewHas('pendingArchiveCount', 1)
+        ->assertSee('value="menunggu"', false)
+        ->assertSee('value="disetujui"', false)
+        ->assertSee('value="ditolak"', false);
+});
+
 it('protects role-specific pages and renders the shared archive view for allowed roles', function (): void {
     $roles = [
         ['Staff', 'staff.arsip'],

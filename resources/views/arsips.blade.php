@@ -271,9 +271,9 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Status</label>
                     <select id="editDocStatus" required class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
-                        <option value="Finalized">Finalized</option>
-                        <option value="Draft">Draft</option>
-                        <option value="Archived">Archived</option>
+                        <option value="menunggu">Menunggu</option>
+                        <option value="disetujui">Disetujui</option>
+                        <option value="ditolak">Ditolak</option>
                     </select>
                 </div>
             </div>
@@ -404,6 +404,7 @@
         payload.append('document', file);
         payload.append('title', name);
         payload.append('category_id', cat);
+        payload.append('status', 'menunggu');
 
         fetch(@js($uploadRoute), {
             method: 'POST',
@@ -441,14 +442,12 @@
         tr.dataset.canDelete = data.canDelete ? 'true' : 'false';
 
         let statusBadge = '';
-        if (data.status === 'Finalized' || data.status === 'disetujui') {
-            statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Finalized</span>`;
-        } else if (data.status === 'Draft' || data.status === 'menunggu') {
-            statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-600 border border-amber-100"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Draft</span>`;
+        if (data.status === 'disetujui') {
+            statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Disetujui</span>`;
+        } else if (data.status === 'menunggu') {
+            statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-600 border border-amber-100"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Menunggu</span>`;
         } else if (data.status === 'ditolak') {
             statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-600 border border-rose-100"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Ditolak</span>`;
-        } else {
-            statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-600 border border-blue-100"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Archived</span>`;
         }
 
         const safeName = escapeHtml(data.name);
@@ -544,12 +543,14 @@
             activeEditRow.querySelector('td:nth-child(2) span').textContent = newCat;
 
             const statCell = activeEditRow.querySelector('td:nth-child(4)');
-            if (newStat === 'Finalized') {
-                statCell.innerHTML = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Finalized</span>`;
-            } else if (newStat === 'Draft') {
-                statCell.innerHTML = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-600 border border-amber-100"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Draft</span>`;
+            if (newStat === 'disetujui') {
+                statCell.innerHTML = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Disetujui</span>`;
+            } else if (newStat === 'menunggu') {
+                statCell.innerHTML = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-600 border border-amber-100"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Menunggu</span>`;
+            } else if (newStat === 'ditolak') {
+                statCell.innerHTML = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-600 border border-rose-100"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Ditolak</span>`;
             } else {
-                statCell.innerHTML = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-600 border border-blue-100"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Archived</span>`;
+                statCell.innerHTML = '';
             }
         }
 

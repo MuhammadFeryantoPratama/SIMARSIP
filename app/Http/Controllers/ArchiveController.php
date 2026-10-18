@@ -43,6 +43,7 @@ class ArchiveController extends Controller
             'layout' => 'layouts.app',
             'uploadRoute' => $uploadRoute,
             'canUpload' => $uploadRoute !== null,
+            'pendingArchiveCount' => DataArsip::query()->where('status', 'menunggu')->count(),
             'archives' => $archives,
             'archiveRows' => $archives->getCollection()->map(fn (DataArsip $archive): array => [
                 'id' => $archive->id,

@@ -114,7 +114,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-xs" id="staffUploadsTable">
                         {{-- Row 1: SK-Rektor-2023-001.pdf --}}
-                        <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer" onclick="previewStaffDoc('SK-Rektor-2023-001.pdf', 'Akademik', '2.4 MB', 'TERVERIFIKASI')">
+                        <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer" onclick="previewStaffDoc('SK-Rektor-2023-001.pdf', 'Akademik', '2.4 MB', 'disetujui')">
                             <td class="py-4 px-6">
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center flex-shrink-0">
@@ -130,7 +130,7 @@
                             <td class="py-4 px-4 text-slate-500">24 Okt 2023, 09:15</td>
                             <td class="py-4 px-4">
                                 <span class="px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase">
-                                    TERVERIFIKASI
+                                    Disetujui
                                 </span>
                             </td>
                             <td class="py-4 px-6 text-right">
@@ -141,7 +141,7 @@
                         </tr>
 
                         {{-- Row 2: Laporan-Keuangan-Q3.docx --}}
-                        <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer" onclick="previewStaffDoc('Laporan-Keuangan-Q3.docx', 'Keuangan', '1.1 MB', 'PENDING')">
+                        <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer" onclick="previewStaffDoc('Laporan-Keuangan-Q3.docx', 'Keuangan', '1.1 MB', 'menunggu')">
                             <td class="py-4 px-6">
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
@@ -157,7 +157,7 @@
                             <td class="py-4 px-4 text-slate-500">24 Okt 2023, 08:42</td>
                             <td class="py-4 px-4">
                                 <span class="px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider bg-amber-50 text-amber-600 border border-amber-100 uppercase">
-                                    PENDING
+                                    Menunggu
                                 </span>
                             </td>
                             <td class="py-4 px-6 text-right">
@@ -168,7 +168,7 @@
                         </tr>
 
                         {{-- Row 3: MOU-Antar-Instansi-2023.pdf --}}
-                        <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer" onclick="previewStaffDoc('MOU-Antar-Instansi-2023.pdf', 'Hukum & Humas', '4.8 MB', 'TERVERIFIKASI')">
+                        <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer" onclick="previewStaffDoc('MOU-Antar-Instansi-2023.pdf', 'Hukum & Humas', '4.8 MB', 'disetujui')">
                             <td class="py-4 px-6">
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center flex-shrink-0">
@@ -184,7 +184,7 @@
                             <td class="py-4 px-4 text-slate-500">23 Okt 2023, 16:50</td>
                             <td class="py-4 px-4">
                                 <span class="px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase">
-                                    TERVERIFIKASI
+                                    Disetujui
                                 </span>
                             </td>
                             <td class="py-4 px-6 text-right">
@@ -195,7 +195,7 @@
                         </tr>
 
                         {{-- Row 4: Absensi-Pegawai-Sept-2023.xlsx --}}
-                        <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer" onclick="previewStaffDoc('Absensi-Pegawai-Sept-2023.xlsx', 'SDM', '0.8 MB', 'TERVERIFIKASI')">
+                        <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer" onclick="previewStaffDoc('Absensi-Pegawai-Sept-2023.xlsx', 'SDM', '0.8 MB', 'disetujui')">
                             <td class="py-4 px-6">
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
@@ -211,7 +211,7 @@
                             <td class="py-4 px-4 text-slate-500">23 Okt 2023, 14:20</td>
                             <td class="py-4 px-4">
                                 <span class="px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-100 uppercase">
-                                    TERVERIFIKASI
+                                    Disetujui
                                 </span>
                             </td>
                             <td class="py-4 px-6 text-right">
@@ -309,8 +309,9 @@
             <div>
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Status Awal</label>
                 <select id="newInputStatus" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20">
-                    <option value="TERVERIFIKASI">TERVERIFIKASI</option>
-                    <option value="PENDING">PENDING</option>
+                    <option value="menunggu">Menunggu</option>
+                    <option value="disetujui">Disetujui</option>
+                    <option value="ditolak">Ditolak</option>
                 </select>
             </div>
             <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
@@ -384,7 +385,7 @@
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50/50 transition-colors cursor-pointer bg-blue-50/20';
 
-        const isVerif = data.status === 'TERVERIFIKASI';
+        const isVerif = data.status === 'disetujui';
         const badgeClass = isVerif ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100';
 
         tr.innerHTML = `
@@ -403,7 +404,7 @@
             <td class="py-4 px-4 text-slate-500">${data.date}</td>
             <td class="py-4 px-4">
                 <span class="px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider ${badgeClass} border uppercase">
-                    ${data.status}
+                    ${data.status === 'disetujui' ? 'Disetujui' : data.status === 'ditolak' ? 'Ditolak' : 'Menunggu'}
                 </span>
             </td>
             <td class="py-4 px-6 text-right">
