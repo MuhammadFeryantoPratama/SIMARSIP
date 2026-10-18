@@ -31,9 +31,6 @@
                 <a href="/login" class="text-sm font-semibold text-[#1E56C9] hover:text-[#0D2B68] transition-colors">
                     Log in
                 </a>
-                <a href="/register" class="inline-flex items-center justify-center text-sm font-semibold text-white bg-[#0D2B68] hover:bg-[#091F4B] px-5 py-2 rounded-md transition-all shadow-sm active:scale-95">
-                    Register
-                </a>
             </div>
 
             {{-- Mobile Menu Hamburger --}}
@@ -54,7 +51,6 @@
         <a href="#kontak" class="block px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded">Kontak</a>
         <div class="pt-3 border-t border-gray-100 flex flex-col gap-2">
             <a href="/login" class="w-full text-center py-2 text-sm font-semibold text-[#1E56C9]">Log in</a>
-            <a href="/register" class="w-full text-center py-2 text-sm font-semibold text-white bg-[#0D2B68] rounded">Register</a>
         </div>
     </div>
 </nav>

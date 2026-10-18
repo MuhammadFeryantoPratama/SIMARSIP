@@ -13,9 +13,6 @@
                 </p>
 
                 <div class="flex flex-wrap items-center gap-3.5 pt-2">
-                    <a href="/register" class="inline-flex items-center justify-center px-6 py-2.5 text-xs sm:text-sm font-semibold text-white bg-[#0D2B68] hover:bg-[#091F4B] rounded-md transition-all shadow-sm active:scale-95">
-                        Mulai Gratis
-                    </a>
                     <a href="#tentang" class="inline-flex items-center justify-center px-6 py-2.5 text-xs sm:text-sm font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-md transition-all active:scale-95">
                         Lihat Demo
                     </a>

@@ -21,7 +21,6 @@
             </button>
         </div>
     </div>
-
     {{-- Top 4 Stat Cards --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {{-- Card 1: Total Pengguna --}}
@@ -115,7 +114,7 @@
                     <table class="w-full text-left" id="userListTable">
                         <thead>
                             <tr class="bg-slate-50/70 border-b border-slate-100 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                                <th class="py-3 px-6">NAMA & NIP</th>
+                                <th class="py-3 px-6">NAMA & USERNAME</th>
                                 <th class="py-3 px-4">ROLE</th>
                                 <th class="py-3 px-4">STATUS</th>
                                 <th class="py-3 px-6 text-right">AKSI</th>
@@ -137,7 +136,7 @@
                                             </div>
                                             <div>
                                                 <p class="font-bold text-slate-800">{{ $user->name }}</p>
-                                                <p class="text-[11px] text-slate-400">NIP. {{ $user->username }}</p>
+                                                <p class="text-[11px] text-slate-400">Username: {{ $user->username }}</p>
                                             </div>
                                         </div>
                                     </td>
@@ -152,7 +151,7 @@
                                         </span>
                                     </td>
                                     <td class="py-3.5 px-6 text-right">
-                                        <button onclick="showUserActionModal({{ $user->id }}, @js($user->name))" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600" title="Kelola Akun">
+                                        <button onclick="showUserActionModal({{ $user->id }}, @js($user->name), @js($user->username))" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600" title="Kelola Akun">
                                             <span class="material-icons-outlined text-base">more_horiz</span>
                                         </button>
                                     </td>
@@ -349,8 +348,12 @@
                 <input type="text" id="newUserName" required placeholder="Contoh: Hendra Kusuma" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
             </div>
             <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">NIP (Nomor Induk Pegawai)</label>
-                <input type="text" id="newUserNIP" required placeholder="199501012020121001" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Username</label>
+                <input type="text" id="newUserUsername" required placeholder="Contoh: hendra.kusuma" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Email</label>
+                <input type="email" id="newUserEmail" required placeholder="nama@instansi.go.id" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
@@ -366,6 +369,16 @@
                         <option value="Aktif">Aktif</option>
                         <option value="Nonaktif">Nonaktif</option>
                     </select>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Password</label>
+                    <input type="password" id="newUserPassword" minlength="8" required placeholder="Minimal 8 karakter" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Konfirmasi Password</label>
+                    <input type="password" id="newUserPasswordConfirmation" minlength="8" required placeholder="Ulangi password" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
                 </div>
             </div>
             <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
@@ -393,10 +406,18 @@
             </button>
         </div>
         <div class="mt-4 space-y-3">
+            <form onsubmit="handleUsernameUpdate(event)" class="space-y-3">
+                <label for="userUsername" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Username</label>
+                <div class="flex gap-2">
+                    <input type="text" id="userUsername" maxlength="50" required class="min-w-0 flex-1 px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    <button type="submit" class="px-4 py-2 bg-[#0b1f51] hover:bg-[#122b6c] text-white rounded-xl text-xs font-bold transition-all">Simpan</button>
+                </div>
+            </form>
             <form onsubmit="handlePasswordReset(event)" class="space-y-3">
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Reset Kata Sandi</label>
                 <div class="flex gap-2">
                     <input type="password" id="userNewPassword" minlength="8" required placeholder="Minimal 8 karakter" class="min-w-0 flex-1 px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                    <input type="password" id="userNewPasswordConfirmation" minlength="8" required placeholder="Ulangi kata sandi" class="min-w-0 flex-1 px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
                     <button type="submit" class="px-4 py-2 bg-[#0b1f51] hover:bg-[#122b6c] text-white rounded-xl text-xs font-bold transition-all">Simpan</button>
                 </div>
             </form>
@@ -571,11 +592,16 @@
     function handleCreateUserSubmit(e) {
         e.preventDefault();
         const name = document.getElementById('newUserName').value.trim();
-        const nip = document.getElementById('newUserNIP').value.trim();
+        const username = document.getElementById('newUserUsername').value.trim();
         const role = document.getElementById('newUserRole').value;
-        const status = document.getElementById('newUserStatus').value;
+        const email = document.getElementById('newUserEmail').value.trim();
+        const password = document.getElementById('newUserPassword').value;
+        const passwordConfirmation = document.getElementById('newUserPasswordConfirmation').value;
 
-        if (!name || !nip) return;
+        if (!name || !username || !email || !password || password !== passwordConfirmation) {
+            showToast(password !== passwordConfirmation ? 'Konfirmasi password tidak cocok.' : 'Lengkapi semua data akun.', 'error');
+            return;
+        }
 
         fetch("{{ route('admin.users.store') }}", {
             method: 'POST',
@@ -584,9 +610,16 @@
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
             },
-            body: JSON.stringify({ name, nip, role, status }),
+            body: JSON.stringify({
+                name,
+                nip: username,
+                role,
+                email,
+                password,
+                password_confirmation: passwordConfirmation,
+            }),
         }).then(response => {
-            if (!response.ok) throw new Error('Akun gagal dibuat. Pastikan NIP belum digunakan.');
+            if (!response.ok) throw new Error('Akun gagal dibuat. Pastikan username belum digunakan.');
             return response;
         }).then(() => {
             closeCreateUserModal();
@@ -597,22 +630,51 @@
 
     let selectedUser = { id: null, name: '' };
 
-    function showUserActionModal(userId, userName) {
-        selectedUser = { id: userId, name: userName };
+    function showUserActionModal(userId, userName, username) {
+        selectedUser = { id: userId, name: userName, username };
         document.getElementById('userActionName').textContent = userName;
+        document.getElementById('userUsername').value = username;
         document.getElementById('userNewPassword').value = '';
+        document.getElementById('userNewPasswordConfirmation').value = '';
         document.getElementById('userActionModal').classList.add('active');
     }
 
     function closeUserActionModal() {
         document.getElementById('userActionModal').classList.remove('active');
-        selectedUser = { id: null, name: '' };
+        selectedUser = { id: null, name: '', username: '' };
+    }
+
+    async function handleUsernameUpdate(event) {
+        event.preventDefault();
+        const username = document.getElementById('userUsername').value.trim();
+
+        try {
+            const response = await fetch(`/admin/users/${selectedUser.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ username }),
+            });
+            if (!response.ok) throw new Error('Username gagal diperbarui.');
+            selectedUser.username = username;
+            showToast('Username berhasil diperbarui.', 'success');
+        } catch (error) {
+            showToast(error.message, 'error');
+        }
     }
 
     async function handlePasswordReset(event) {
         event.preventDefault();
         const password = document.getElementById('userNewPassword').value;
+        const passwordConfirmation = document.getElementById('userNewPasswordConfirmation').value;
         const userName = selectedUser.name;
+        if (password !== passwordConfirmation) {
+            showToast('Konfirmasi password tidak cocok.', 'error');
+            return;
+        }
 
         try {
             const response = await fetch(`/admin/users/${selectedUser.id}/password`, {
@@ -622,7 +684,10 @@
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
                 },
-                body: JSON.stringify({ password }),
+                body: JSON.stringify({
+                    password,
+                    password_confirmation: passwordConfirmation,
+                }),
             });
             if (!response.ok) throw new Error('Kata sandi gagal direset.');
             closeUserActionModal();

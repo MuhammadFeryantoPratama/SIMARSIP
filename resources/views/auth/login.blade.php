@@ -86,11 +86,6 @@
         {{-- Divider --}}
         <div class="my-5 border-t border-gray-100"></div>
 
-        {{-- Register Link --}}
-        <p class="text-center text-[11px] text-gray-500">
-            Belum punya akun?
-            <a href="/register" class="text-[#1E56C9] hover:underline font-semibold ml-1">Daftar sekarang</a>
-        </p>
     </div>
 </div>
 

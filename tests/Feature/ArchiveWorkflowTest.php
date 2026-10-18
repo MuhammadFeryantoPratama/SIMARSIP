@@ -91,7 +91,7 @@ it('persists role permission changes for administrators', function (): void {
 it('renders public pages and redirects each role to its dashboard', function (): void {
     $this->get(route('home'))->assertOk()->assertViewIs('landing.index');
     $this->get(route('login'))->assertOk()->assertViewIs('auth.login');
-    $this->get(route('register'))->assertOk()->assertViewIs('auth.register');
+    $this->get('/register')->assertNotFound();
     $this->get(route('subscriptions'))->assertOk()->assertViewIs('subscriptions.index');
 
     $roles = [
@@ -112,24 +112,6 @@ it('renders public pages and redirects each role to its dashboard', function ():
 
         $this->post(route('logout'))->assertRedirect(route('login'));
     }
-});
-
-it('registers a staff user with a unique username', function (): void {
-    $response = $this->post(route('register'), [
-        'name' => 'New Employee',
-        'institution' => 'Government Office',
-        'email' => 'new.employee@example.com',
-        'password' => 'password',
-        'password_confirmation' => 'password',
-        'terms' => '1',
-    ]);
-
-    $response->assertRedirect(route('staff.dashboard'));
-    $user = User::query()->where('email', 'new.employee@example.com')->firstOrFail();
-
-    expect($user->username)->toBe('newemployee');
-    expect($user->role->name)->toBe('Staff');
-    expect(Hash::check('password', $user->password))->toBeTrue();
 });
 
 it('rejects invalid credentials and invalid archive uploads', function (): void {
@@ -249,6 +231,7 @@ it('allows administrators to manage roles, users, and passwords', function (): v
             'role' => 'Reviewer',
             'email' => 'created@example.com',
             'password' => 'password',
+            'password_confirmation' => 'password',
         ])
         ->assertRedirect();
 
@@ -262,6 +245,11 @@ it('allows administrators to manage roles, users, and passwords', function (): v
         'email' => $createdUser->username,
         'password' => 'new-password',
     ])->assertRedirect(route('staff.dashboard'));
+
+    $this->actingAs($admin)
+        ->patchJson(route('admin.users.update', $createdUser), ['username' => 'NIP-UPDATED'])
+        ->assertOk();
+    expect($createdUser->fresh()->username)->toBe('NIP-UPDATED');
 
     $this->actingAs($admin)
         ->delete(route('admin.users.destroy', $createdUser))

@@ -10,9 +10,6 @@
         </p>
 
         <div class="flex flex-wrap items-center justify-center gap-3 pt-3">
-            <a href="/register" class="inline-flex items-center justify-center px-6 py-2.5 text-xs sm:text-sm font-bold text-[#0D2B68] bg-white hover:bg-gray-50 rounded-md transition-all shadow-sm active:scale-95">
-                Mulai Gratis Sekarang
-            </a>
             <a href="#kontak" class="inline-flex items-center justify-center px-6 py-2.5 text-xs sm:text-sm font-medium text-white border border-white/40 hover:bg-white/10 rounded-md transition-all active:scale-95">
                 Hubungi Tim Kami
             </a>

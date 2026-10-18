@@ -12,8 +12,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminController extends Controller
@@ -185,25 +185,39 @@ class AdminController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'nip' => ['required', 'string', 'max:50', 'unique:users,username'],
             'role' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'unique:users,email'],
-            'password' => ['nullable', 'string', 'min:8'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
         $role = Role::query()->firstOrCreate(
             ['name' => $validated['role']],
             ['description' => 'Peran instansi.'],
         );
-        $email = $validated['email'] ?? $validated['nip'].'@internal.simarsip.go.id';
-
         User::create([
             'username' => $validated['nip'],
             'name' => $validated['name'],
-            'email' => $email,
+            'email' => $validated['email'],
             'role_id' => $role->id,
-            'password' => Hash::make($validated['password'] ?? $validated['nip']),
+            'password' => $validated['password'],
         ]);
 
         return back()->with('success', 'Akun berhasil dibuat.');
+    }
+
+    public function updateUser(Request $request, User $user): JsonResponse
+    {
+        $validated = $request->validate([
+            'username' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('users', 'username')->ignore($user),
+            ],
+        ]);
+
+        $user->update($validated);
+
+        return response()->json(['message' => 'Username berhasil diperbarui.']);
     }
 
     public function updateUserPassword(Request $request, User $user): JsonResponse
