@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class DataArsip extends Model
 {
     protected $fillable = [
+        'user_id',
         'title',
         'document_path',
         'category_id',
@@ -26,5 +27,10 @@ class DataArsip extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

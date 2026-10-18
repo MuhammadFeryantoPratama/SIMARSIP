@@ -320,6 +320,44 @@
         </form>
     </div>
 </div>
+
+{{-- Modal: Konfirmasi Hapus Dokumen Staff --}}
+<div id="deleteStaffDocModal" class="modal-overlay" onclick="if(event.target===this)closeDeleteStaffDocModal()">
+    <div class="modal-content max-w-md w-full p-6">
+        <div class="flex items-center gap-3 pb-3 border-b border-slate-100">
+            <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                <span class="material-icons-outlined text-2xl">delete_outline</span>
+            </div>
+            <div>
+                <h3 class="text-base font-bold text-slate-800">Hapus Arsip Unggahan</h3>
+                <p class="text-xs text-slate-400">Konfirmasi penghapusan berkas arsip Anda</p>
+            </div>
+        </div>
+        <div class="my-4 p-4 bg-rose-50/50 rounded-xl border border-rose-100/80 text-xs space-y-2 text-slate-600">
+            <p>Apakah Anda yakin ingin menghapus berkas yang telah Anda unggah ini?</p>
+            <div class="p-3 bg-white rounded-lg border border-rose-100 flex items-center gap-2.5">
+                <span class="material-icons-outlined text-rose-500 text-lg shrink-0">description</span>
+                <div class="truncate">
+                    <p id="deleteStaffDocTitle" class="font-bold text-slate-800 truncate"></p>
+                    <p id="deleteStaffDocNo" class="text-[10px] text-slate-400 font-mono"></p>
+                </div>
+            </div>
+            <p class="text-[11px] text-rose-600 font-medium flex items-center gap-1 pt-1">
+                <span class="material-icons-outlined text-sm shrink-0">warning</span>
+                <span>Dokumen fisik akan dihapus permanen dari server penyimpanan.</span>
+            </p>
+        </div>
+        <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+            <button type="button" onclick="closeDeleteStaffDocModal()" class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+                Batal
+            </button>
+            <button type="button" id="confirmDeleteStaffBtn" onclick="executeDeleteStaffDoc()" class="flex items-center gap-1.5 px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95">
+                <span class="material-icons-outlined text-base">delete</span>
+                <span>Hapus Berkas</span>
+            </button>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -420,23 +458,106 @@
         showToast(`Membuka berkas ${name} (${dept})`, 'info');
     }
 
+    let activeStaffDeleteId = null;
+    let activeStaffDeleteName = '';
+
+    function confirmDeleteStaffDoc(id, name) {
+        activeStaffDeleteId = id;
+        activeStaffDeleteName = name;
+        document.getElementById('deleteStaffDocTitle').textContent = name;
+        document.getElementById('deleteStaffDocNo').textContent = `ARS-${String(id).padStart(6, '0')}`;
+        document.getElementById('deleteStaffDocModal').classList.add('active');
+    }
+
+    function closeDeleteStaffDocModal() {
+        document.getElementById('deleteStaffDocModal').classList.remove('active');
+        activeStaffDeleteId = null;
+        activeStaffDeleteName = '';
+    }
+
+    async function executeDeleteStaffDoc() {
+        if (!activeStaffDeleteId) return;
+        const btn = document.getElementById('confirmDeleteStaffBtn');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<span class="material-icons-outlined text-base animate-spin">sync</span> Menghapus...`;
+
+        try {
+            const response = await fetch(`/archives/${activeStaffDeleteId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                const resData = await response.json().catch(() => ({}));
+                throw new Error(resData.message || 'Gagal menghapus berkas arsip.');
+            }
+
+            closeDeleteStaffDocModal();
+            showToast(`Arsip "${activeStaffDeleteName}" berhasil dihapus.`, 'success');
+
+            const row = document.getElementById(`staff-row-${activeStaffDeleteId}`);
+            if (row) {
+                row.style.transition = 'all 0.3s ease';
+                row.style.opacity = '0';
+                row.style.transform = 'translateX(20px)';
+                setTimeout(() => row.remove(), 300);
+            }
+        } catch (err) {
+            showToast(err.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         const archives = @json($recentArchiveRows);
         const body = document.getElementById('staffUploadsTable');
         if (!body) return;
-        body.innerHTML = archives.length ? archives.map(archive => `
-            <tr class="hover:bg-slate-50/50 transition-colors">
-                <td class="py-4 px-6"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><span class="material-icons-outlined text-lg">description</span></div><div><p class="font-bold text-slate-800">${escapeHtml(archive.name)}</p><p class="text-[11px] text-slate-400">ARS-${String(archive.id).padStart(6, '0')}</p></div></div></td>
-                <td class="py-4 px-4 text-slate-700 font-semibold">Arsip Digital</td>
+        body.innerHTML = archives.length ? archives.map(archive => {
+            const safeName = escapeHtml(archive.name);
+            const safeCategory = escapeHtml(archive.category || 'Arsip Digital');
+            return `
+            <tr class="hover:bg-slate-50/50 transition-colors" id="staff-row-${archive.id}">
+                <td class="py-4 px-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                            <span class="material-icons-outlined text-lg">description</span>
+                        </div>
+                        <div>
+                            <p class="font-bold text-slate-800">${safeName}</p>
+                            <p class="text-[11px] text-slate-400 font-mono">ARS-${String(archive.id).padStart(6, '0')}</p>
+                        </div>
+                    </div>
+                </td>
+                <td class="py-4 px-4 text-slate-700 font-semibold">${safeCategory}</td>
                 <td class="py-4 px-4 text-slate-500">${archive.date}</td>
-                <td class="py-4 px-4"><span class="px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider ${archive.status === 'disetujui' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : archive.status === 'ditolak' ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-amber-50 text-amber-600 border-amber-100'} border uppercase">${archive.status}</span></td>
-                <td class="py-4 px-6 text-right"><a href="${archive.url}" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600" title="Unduh"><span class="material-icons-outlined text-base">download</span></a></td>
+                <td class="py-4 px-4">
+                    <span class="px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider ${archive.status === 'disetujui' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : archive.status === 'ditolak' ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-amber-50 text-amber-600 border-amber-100'} border uppercase">${archive.status}</span>
+                </td>
+                <td class="py-4 px-6 text-right">
+                    <div class="flex items-center justify-end gap-1.5">
+                        <a href="${archive.url}" class="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors" title="Unduh">
+                            <span class="material-icons-outlined text-base">download</span>
+                        </a>
+                        ${archive.canDelete ? `
+                            <button onclick="confirmDeleteStaffDoc(${archive.id}, '${safeName}')" class="p-1.5 hover:bg-rose-50 rounded-lg text-slate-400 hover:text-rose-600 transition-colors" title="Hapus Berkas">
+                                <span class="material-icons-outlined text-base">delete_outline</span>
+                            </button>
+                        ` : ''}
+                    </div>
+                </td>
             </tr>
-        `).join('') : '<tr><td colspan="5" class="py-10 text-center text-xs text-slate-400">Belum ada dokumen.</td></tr>';
+            `;
+        }).join('') : '<tr><td colspan="5" class="py-10 text-center text-xs text-slate-400">Belum ada dokumen.</td></tr>';
     });
 
     function escapeHtml(value) {
-        return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]));
+        return String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]));
     }
 </script>
 @endpush

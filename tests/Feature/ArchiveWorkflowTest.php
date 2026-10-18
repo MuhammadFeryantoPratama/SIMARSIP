@@ -35,6 +35,7 @@ it('allows staff to upload an archive for approval', function (): void {
     expect(DataArsip::count())->toBe(1);
     expect(DataArsip::first()->status)->toBe('menunggu');
     expect(DataArsip::first()->category_id)->toBe($category->id);
+    expect(DataArsip::first()->user_id)->toBe($user->id);
     Storage::disk('local')->assertExists(DataArsip::first()->document_path);
 });
 
@@ -270,4 +271,126 @@ it('protects role-specific pages and renders the shared archive view for allowed
     $staffRole = Role::query()->where('name', 'Staff')->firstOrFail();
     $staff = User::factory()->create(['role_id' => $staffRole->id]);
     $this->actingAs($staff)->get(route('admin.dashboard'))->assertForbidden();
+});
+
+it('allows staff to delete archives they uploaded', function (): void {
+    Storage::fake('local');
+    $staffRole = Role::firstOrCreate(['name' => 'Staff'], ['description' => 'Staff']);
+    $staff = User::factory()->create(['role_id' => $staffRole->id]);
+
+    Storage::disk('local')->put('archives/my-file.pdf', 'content');
+    $archive = DataArsip::create([
+        'user_id' => $staff->id,
+        'title' => 'My File',
+        'document_path' => 'archives/my-file.pdf',
+        'status' => 'menunggu',
+    ]);
+
+    $response = $this->actingAs($staff)
+        ->delete(route('archives.destroy', $archive));
+
+    $response->assertRedirect();
+    expect(DataArsip::whereKey($archive->id)->exists())->toBeFalse();
+    Storage::disk('local')->assertMissing('archives/my-file.pdf');
+});
+
+it('allows staff to delete archives via staff route with json response', function (): void {
+    Storage::fake('local');
+    $staffRole = Role::firstOrCreate(['name' => 'Staff'], ['description' => 'Staff']);
+    $staff = User::factory()->create(['role_id' => $staffRole->id]);
+
+    Storage::disk('local')->put('archives/my-file-json.pdf', 'content');
+    $archive = DataArsip::create([
+        'user_id' => $staff->id,
+        'title' => 'My File JSON',
+        'document_path' => 'archives/my-file-json.pdf',
+        'status' => 'menunggu',
+    ]);
+
+    $response = $this->actingAs($staff)
+        ->deleteJson(route('staff.archives.destroy', $archive));
+
+    $response->assertOk()
+        ->assertJson(['message' => 'Arsip berhasil dihapus.']);
+    expect(DataArsip::whereKey($archive->id)->exists())->toBeFalse();
+    Storage::disk('local')->assertMissing('archives/my-file-json.pdf');
+});
+
+it('forbids staff from deleting archives uploaded by others', function (): void {
+    Storage::fake('local');
+    $staffRole = Role::firstOrCreate(['name' => 'Staff'], ['description' => 'Staff']);
+    $staff1 = User::factory()->create(['role_id' => $staffRole->id]);
+    $staff2 = User::factory()->create(['role_id' => $staffRole->id]);
+
+    Storage::disk('local')->put('archives/other-file.pdf', 'content');
+    $archive = DataArsip::create([
+        'user_id' => $staff1->id,
+        'title' => 'Other File',
+        'document_path' => 'archives/other-file.pdf',
+        'status' => 'menunggu',
+    ]);
+
+    $response = $this->actingAs($staff2)
+        ->delete(route('archives.destroy', $archive));
+
+    $response->assertForbidden();
+    expect(DataArsip::whereKey($archive->id)->exists())->toBeTrue();
+    Storage::disk('local')->assertExists('archives/other-file.pdf');
+});
+
+it('allows admin to delete archives uploaded by any user', function (): void {
+    Storage::fake('local');
+    $staffRole = Role::firstOrCreate(['name' => 'Staff'], ['description' => 'Staff']);
+    $adminRole = Role::firstOrCreate(['name' => 'Admin'], ['description' => 'Admin']);
+    $staff = User::factory()->create(['role_id' => $staffRole->id]);
+    $admin = User::factory()->create(['role_id' => $adminRole->id]);
+
+    Storage::disk('local')->put('archives/staff-doc.pdf', 'content');
+    $archive = DataArsip::create([
+        'user_id' => $staff->id,
+        'title' => 'Staff Doc',
+        'document_path' => 'archives/staff-doc.pdf',
+        'status' => 'menunggu',
+    ]);
+
+    $response = $this->actingAs($admin)
+        ->deleteJson(route('archives.destroy', $archive));
+
+    $response->assertOk()
+        ->assertJson(['message' => 'Arsip berhasil dihapus.']);
+    expect(DataArsip::whereKey($archive->id)->exists())->toBeFalse();
+    Storage::disk('local')->assertMissing('archives/staff-doc.pdf');
+});
+
+it('allows pimpinan to delete archives uploaded by staff while forbidding another staff', function (): void {
+    Storage::fake('local');
+    $staffRole = Role::firstOrCreate(['name' => 'Staff'], ['description' => 'Staff']);
+    $pimpinanRole = Role::firstOrCreate(['name' => 'Pimpinan'], ['description' => 'Pimpinan']);
+
+    $staffA = User::factory()->create(['role_id' => $staffRole->id]);
+    $staffB = User::factory()->create(['role_id' => $staffRole->id]);
+    $pimpinan = User::factory()->create(['role_id' => $pimpinanRole->id]);
+
+    Storage::disk('local')->put('archives/staff-a-doc.pdf', 'content');
+    $archive = DataArsip::create([
+        'user_id' => $staffA->id,
+        'title' => 'Berkas Salah Upload Staff A',
+        'document_path' => 'archives/staff-a-doc.pdf',
+        'status' => 'menunggu',
+    ]);
+
+    // Staff B coba hapus -> DITOLAK (403)
+    $this->actingAs($staffB)
+        ->delete(route('archives.destroy', $archive))
+        ->assertForbidden();
+    expect(DataArsip::whereKey($archive->id)->exists())->toBeTrue();
+
+    // Pimpinan hapus -> BERHASIL
+    $this->actingAs($pimpinan)
+        ->deleteJson(route('archives.destroy', $archive))
+        ->assertOk()
+        ->assertJson(['message' => 'Arsip berhasil dihapus.']);
+
+    expect(DataArsip::whereKey($archive->id)->exists())->toBeFalse();
+    Storage::disk('local')->assertMissing('archives/staff-a-doc.pdf');
 });

@@ -284,6 +284,44 @@
         </form>
     </div>
 </div>
+
+{{-- Modal: Hapus Arsip --}}
+<div id="deleteArsipModal" class="modal-overlay" onclick="if(event.target===this)closeDeleteArsipModal()">
+    <div class="modal-content max-w-md w-full p-6">
+        <div class="flex items-center gap-3 pb-3 border-b border-slate-100">
+            <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                <span class="material-icons-outlined text-2xl">delete_outline</span>
+            </div>
+            <div>
+                <h3 class="text-base font-bold text-slate-800">Hapus Arsip Digital</h3>
+                <p class="text-xs text-slate-400">Konfirmasi penghapusan berkas arsip</p>
+            </div>
+        </div>
+        <div class="my-4 p-4 bg-rose-50/50 rounded-xl border border-rose-100/80 text-xs space-y-2 text-slate-600">
+            <p>Apakah Anda yakin ingin menghapus arsip ini secara permanen?</p>
+            <div class="p-3 bg-white rounded-lg border border-rose-100 flex items-center gap-2.5">
+                <span class="material-icons-outlined text-rose-500 text-lg shrink-0">description</span>
+                <div class="truncate">
+                    <p id="deleteDocTitle" class="font-bold text-slate-800 truncate"></p>
+                    <p id="deleteDocNo" class="text-[10px] text-slate-400 font-mono"></p>
+                </div>
+            </div>
+            <p class="text-[11px] text-rose-600 font-medium flex items-center gap-1 pt-1">
+                <span class="material-icons-outlined text-sm shrink-0">warning</span>
+                <span>Berkas fisik di penyimpanan akan langsung dihapus dan tidak dapat dipulihkan.</span>
+            </p>
+        </div>
+        <div class="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+            <button type="button" onclick="closeDeleteArsipModal()" class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+                Batal
+            </button>
+            <button type="button" id="confirmDeleteArsipBtn" onclick="executeDeleteArsip()" class="flex items-center gap-1.5 px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95">
+                <span class="material-icons-outlined text-base">delete</span>
+                <span>Hapus Berkas</span>
+            </button>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -384,6 +422,11 @@
         }).catch(error => showToast(error.message, 'error'));
     }
 
+    // Escape helper
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
+    }
+
     // Append helper
     function appendNewArsipRow(data) {
         const tbody = document.getElementById('arsipTableBody');
@@ -395,6 +438,7 @@
         tr.dataset.category = data.category;
         tr.dataset.status = data.status;
         tr.dataset.date = data.date;
+        tr.dataset.canDelete = data.canDelete ? 'true' : 'false';
 
         let statusBadge = '';
         if (data.status === 'Finalized' || data.status === 'disetujui') {
@@ -407,34 +451,45 @@
             statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-600 border border-blue-100"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Archived</span>`;
         }
 
+        const safeName = escapeHtml(data.name);
+        const safeNo = escapeHtml(data.no);
+        const safeCategory = escapeHtml(data.category);
+        const safeStatus = escapeHtml(data.status);
+        const safeDate = escapeHtml(data.date);
+
         tr.innerHTML = `
             <td class="py-4 px-6">
                 <div class="flex items-center gap-3.5">
                     <span class="material-icons-outlined text-slate-400 text-xl flex-shrink-0">description</span>
                     <div>
-                        <p class="font-bold text-slate-800">${data.name}</p>
-                        <p class="text-[11px] text-slate-400">${data.no}</p>
+                        <p class="font-bold text-slate-800">${safeName}</p>
+                        <p class="text-[11px] text-slate-400 font-mono">${safeNo}</p>
                     </div>
                 </div>
             </td>
             <td class="py-4 px-4">
                 <span class="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                    ${data.category}
+                    ${safeCategory}
                 </span>
             </td>
-            <td class="py-4 px-4 text-slate-600 font-medium">${data.date}</td>
+            <td class="py-4 px-4 text-slate-600 font-medium">${safeDate}</td>
             <td class="py-4 px-4">${statusBadge}</td>
             <td class="py-4 px-6 text-center">
-                <div class="flex items-center justify-center gap-2 text-slate-400">
-                    <button onclick="previewArsip('${data.name}', '${data.no}', '${data.category}', '${data.status}', '${data.date}')" class="p-1.5 hover:bg-slate-100 hover:text-blue-600 rounded-lg transition-colors" title="Lihat Pratinjau">
+                <div class="flex items-center justify-center gap-1.5 text-slate-400">
+                    <button onclick="previewArsip('${safeName}', '${safeNo}', '${safeCategory}', '${safeStatus}', '${safeDate}')" class="p-1.5 hover:bg-slate-100 hover:text-blue-600 rounded-lg transition-colors" title="Lihat Pratinjau">
                         <span class="material-icons-outlined text-lg">visibility</span>
                     </button>
-                    <button onclick="downloadArsip('${data.name}')" class="p-1.5 hover:bg-slate-100 hover:text-blue-600 rounded-lg transition-colors" title="Unduh Berkas">
+                    <button onclick="downloadArsip('${safeName}')" class="p-1.5 hover:bg-slate-100 hover:text-blue-600 rounded-lg transition-colors" title="Unduh Berkas">
                         <span class="material-icons-outlined text-lg">download</span>
                     </button>
-                    <button onclick="editArsip('${data.name}', '${data.no}', '${data.category}', '${data.status}')" class="p-1.5 hover:bg-slate-100 hover:text-blue-600 rounded-lg transition-colors" title="Ubah Metadata">
+                    <button onclick="editArsip('${safeName}', '${safeNo}', '${safeCategory}', '${safeStatus}')" class="p-1.5 hover:bg-slate-100 hover:text-blue-600 rounded-lg transition-colors" title="Ubah Metadata">
                         <span class="material-icons-outlined text-lg">edit</span>
                     </button>
+                    ${data.canDelete ? `
+                        <button onclick="confirmDeleteArsip('${data.id}', '${safeName}', '${safeNo}')" class="p-1.5 hover:bg-rose-50 hover:text-rose-600 rounded-lg transition-colors text-slate-400" title="Hapus Berkas">
+                            <span class="material-icons-outlined text-lg">delete_outline</span>
+                        </button>
+                    ` : ''}
                 </div>
             </td>
         `;
@@ -502,6 +557,68 @@
         showToast(`Metadata berkas "${newName}" berhasil diperbarui!`, 'success');
     }
 
+    // Modal: Hapus Arsip
+    let activeDeleteId = null;
+    let activeDeleteName = '';
+    let activeDeleteRow = null;
+
+    function confirmDeleteArsip(id, name, no) {
+        activeDeleteId = id;
+        activeDeleteName = name;
+        activeDeleteRow = [...document.querySelectorAll('.arsip-data-row')].find(item => String(item.dataset.id) === String(id));
+        document.getElementById('deleteDocTitle').textContent = name;
+        document.getElementById('deleteDocNo').textContent = no || `ARS-${String(id).padStart(6, '0')}`;
+        document.getElementById('deleteArsipModal').classList.add('active');
+    }
+
+    function closeDeleteArsipModal() {
+        document.getElementById('deleteArsipModal').classList.remove('active');
+        activeDeleteId = null;
+        activeDeleteName = '';
+        activeDeleteRow = null;
+    }
+
+    async function executeDeleteArsip() {
+        if (!activeDeleteId) return;
+        const btn = document.getElementById('confirmDeleteArsipBtn');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<span class="material-icons-outlined text-base animate-spin">sync</span> Menghapus...`;
+
+        try {
+            const response = await fetch(`/archives/${activeDeleteId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                const resData = await response.json().catch(() => ({}));
+                throw new Error(resData.message || 'Gagal menghapus berkas arsip.');
+            }
+
+            closeDeleteArsipModal();
+            showToast(`Arsip "${activeDeleteName}" berhasil dihapus.`, 'success');
+
+            if (activeDeleteRow) {
+                activeDeleteRow.style.transition = 'all 0.3s ease';
+                activeDeleteRow.style.opacity = '0';
+                activeDeleteRow.style.transform = 'translateX(20px)';
+                setTimeout(() => {
+                    activeDeleteRow.remove();
+                    filterArsipTable();
+                }, 300);
+            }
+        } catch (err) {
+            showToast(err.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    }
+
     // Download file
     function downloadArsip(name) {
         const row = [...document.querySelectorAll('.arsip-data-row')].find(item => item.dataset.name === name);
@@ -545,6 +662,7 @@
                 category: archive.category,
                 date: archive.date,
                 status: archive.status,
+                canDelete: archive.canDelete,
             }));
         }
         const urlParams = new URLSearchParams(window.location.search);

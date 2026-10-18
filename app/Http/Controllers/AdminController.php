@@ -76,6 +76,7 @@ class AdminController extends Controller
 
         $path = $this->storeDocument($validated['document']);
         DataArsip::create([
+            'user_id' => $request->user()->id,
             'title' => $validated['title'] ?? $validated['document']->getClientOriginalName(),
             'document_path' => $path,
             'category_id' => $validated['category_id'] ?? Category::query()->orderBy('id')->value('id'),
@@ -96,10 +97,14 @@ class AdminController extends Controller
         return back()->with('success', 'Status arsip berhasil diperbarui.');
     }
 
-    public function destroyArchive(DataArsip $dataArsip): RedirectResponse
+    public function destroyArchive(Request $request, DataArsip $dataArsip): RedirectResponse|JsonResponse
     {
         Storage::disk('local')->delete($dataArsip->document_path);
         $dataArsip->delete();
+
+        if ($request->wantsJson()) {
+            return response()->json(['message' => 'Arsip berhasil dihapus.']);
+        }
 
         return back()->with('success', 'Arsip berhasil dihapus.');
     }

@@ -38,6 +38,8 @@ Route::middleware('auth')->get('/archives/{dataArsip}/download', [AdminControlle
     ->name('archives.download');
 Route::middleware('auth')->get('/archives/export', [AdminController::class, 'exportArchives'])
     ->name('archives.export');
+Route::middleware('auth')->delete('/archives/{dataArsip}', [ArchiveController::class, 'destroy'])
+    ->name('archives.destroy');
 
 Route::middleware(['auth', 'role:Pimpinan'])->prefix('pimpinan')->name('pimpinan.')->group(function () {
     Route::get('/dashboard', [PimpinanController::class, 'dashboard'])->name('dashboard');
@@ -51,6 +53,7 @@ Route::middleware(['auth', 'role:Staff'])->prefix('staff')->name('staff.')->grou
     Route::get('/dashboard', [StaffController::class, 'dashboard'])->name('dashboard');
     Route::get('/arsip', [ArchiveController::class, 'index'])->name('arsip');
     Route::post('/arsip/upload', [StaffController::class, 'upload'])->name('archives.upload');
+    Route::delete('/arsip/{dataArsip}', [StaffController::class, 'destroy'])->name('archives.destroy');
 });
 
 Route::middleware(['auth', 'role:Auditor'])->prefix('auditor')->name('auditor.')->group(function () {
