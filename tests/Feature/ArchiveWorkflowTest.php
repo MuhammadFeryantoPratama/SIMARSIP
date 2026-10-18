@@ -257,6 +257,11 @@ it('allows administrators to manage roles, users, and passwords', function (): v
         ->patchJson(route('admin.users.password.update', $createdUser), ['password' => 'new-password'])
         ->assertOk();
     expect(Hash::check('new-password', $createdUser->fresh()->password))->toBeTrue();
+    $this->post(route('logout'));
+    $this->post(route('login'), [
+        'email' => $createdUser->username,
+        'password' => 'new-password',
+    ])->assertRedirect(route('staff.dashboard'));
 
     $this->actingAs($admin)
         ->delete(route('admin.users.destroy', $createdUser))

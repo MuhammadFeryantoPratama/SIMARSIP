@@ -212,7 +212,7 @@ class AdminController extends Controller
             'password' => ['required', 'string', 'min:8'],
         ]);
 
-        $user->update(['password' => Hash::make($validated['password'])]);
+        $user->update(['password' => $validated['password']]);
 
         return response()->json(['message' => 'Kata sandi berhasil direset.']);
     }
