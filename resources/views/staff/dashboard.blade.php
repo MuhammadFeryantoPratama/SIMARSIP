@@ -15,7 +15,7 @@
                 <span class="material-icons-outlined text-sm text-slate-500">file_download</span>
                 <span>Export Log</span>
             </button>
-            <button onclick="showInputBaruModal()" class="flex items-center gap-2 px-4 py-2 bg-[#1877F2] hover:bg-[#1264cc] text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-[0.98]">
+            <button onclick="showUploadModal()" class="flex items-center gap-2 px-4 py-2 bg-[#1877F2] hover:bg-[#1264cc] text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-[0.98]">
                 <span class="material-icons-outlined text-sm">add</span>
                 <span>Input Baru</span>
             </button>
@@ -274,53 +274,9 @@
 </div>
 
 {{-- Floating Action Button (+) matching Image 1 --}}
-<button onclick="showInputBaruModal()" class="fixed bottom-6 right-6 w-12 h-12 bg-[#1877F2] hover:bg-[#1264cc] text-white rounded-2xl shadow-lg shadow-blue-500/25 flex items-center justify-center transition-all active:scale-95 z-30" title="Input Baru">
+<button onclick="showUploadModal()" class="fixed bottom-6 right-6 w-12 h-12 bg-[#1877F2] hover:bg-[#1264cc] text-white rounded-2xl shadow-lg shadow-blue-500/25 flex items-center justify-center transition-all active:scale-95 z-30" title="Input Baru">
     <span class="material-icons-outlined text-2xl">add</span>
 </button>
-
-{{-- Modal: Input Baru --}}
-<div id="inputBaruModal" class="modal-overlay" onclick="if(event.target===this)closeInputBaruModal()">
-    <div class="modal-content max-w-lg w-full p-6">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-            <h3 class="text-base font-bold text-slate-800">Input Dokumen Arsip Baru</h3>
-            <button onclick="closeInputBaruModal()" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400"><span class="material-icons-outlined text-xl">close</span></button>
-        </div>
-        <form onsubmit="handleInputBaruSubmit(event)" class="mt-4 space-y-4">
-            <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nama Dokumen</label>
-                <input type="text" id="newInputName" required placeholder="SK-Rektor-2023-XXX.pdf" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Departemen</label>
-                    <select id="newInputDept" required class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20">
-                        <option value="Akademik">Akademik</option>
-                        <option value="Keuangan">Keuangan</option>
-                        <option value="Hukum & Humas">Hukum & Humas</option>
-                        <option value="SDM">SDM</option>
-                        <option value="Aset & Sarpras">Aset & Sarpras</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Ukuran Berkas</label>
-                    <input type="text" id="newInputSize" placeholder="2.1 MB" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
-                </div>
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Status Awal</label>
-                <select id="newInputStatus" class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20">
-                    <option value="menunggu">Menunggu</option>
-                    <option value="disetujui">Disetujui</option>
-                    <option value="ditolak">Ditolak</option>
-                </select>
-            </div>
-            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                <button type="button" onclick="closeInputBaruModal()" class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
-                <button type="submit" class="px-5 py-2 bg-[#1877F2] text-white rounded-xl text-xs font-bold">Simpan Berkas</button>
-            </div>
-        </form>
-    </div>
-</div>
 
 {{-- Modal: Konfirmasi Hapus Dokumen Staff --}}
 <div id="deleteStaffDocModal" class="modal-overlay" onclick="if(event.target===this)closeDeleteStaffDocModal()">
@@ -365,19 +321,6 @@
 <script>
     function handleExportLog() {
         window.location.href = "{{ route('archives.export') }}";
-    }
-
-    function showInputBaruModal() {
-        document.getElementById('inputBaruModal').classList.add('active');
-    }
-    function closeInputBaruModal() {
-        document.getElementById('inputBaruModal').classList.remove('active');
-    }
-
-    function handleInputBaruSubmit(e) {
-        e.preventDefault();
-        closeInputBaruModal();
-        showUploadModal();
     }
 
     function addNewUploadRow(data) {

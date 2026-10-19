@@ -155,7 +155,7 @@
                             </span>
                         </td>
                         <td class="py-4 px-6 text-center">
-                            <button onclick="showReviewModal('ARS-2023-005', 'MoU Vendor Infrastruktur IT', 'Legal · Rahasia', '11 Mei 2023')" class="text-blue-600 hover:text-blue-800 font-bold text-xs hover:underline transition-colors">Review</button>
+                            <button onclick="showDetailModal('ARS-2023-005', 'MoU Vendor Infrastruktur IT', 'Legal · Rahasia', '11 Mei 2023', 'Pending Review')" class="text-blue-600 hover:text-blue-800 font-bold text-xs hover:underline transition-colors">Detail</button>
                         </td>
                     </tr>
 
@@ -276,62 +276,10 @@
                     </div>
                 </div>
             </div>
-            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 text-xs">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Catatan Audit</p>
-                <p class="text-slate-600 leading-relaxed">Dokumen telah diverifikasi secara digital. Hash SHA-256 cocok dengan catatan di ledger sistem. Tidak ditemukan anomali pada metadata atau isi dokumen.</p>
-            </div>
         </div>
         <div class="flex justify-between pt-2 border-t border-slate-100">
             <button onclick="handleDownloadAuditReport()" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5"><span class="material-icons-outlined text-base">download</span> Unduh Laporan</button>
             <button onclick="closeDetailModal()" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold">Tutup</button>
-        </div>
-    </div>
-</div>
-
-{{-- Modal: Review Dokumen --}}
-<div id="reviewModal" class="modal-overlay" onclick="if(event.target===this)closeReviewModal()">
-    <div class="modal-content max-w-lg w-full p-6">
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div class="flex items-center gap-2.5">
-                <div class="w-9 h-9 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center">
-                    <span class="material-icons-outlined text-lg">rate_review</span>
-                </div>
-                <div>
-                    <h3 class="text-base font-bold text-slate-800">Review Arsip</h3>
-                    <p class="text-xs text-slate-400" id="reviewDocNo">ARS-2023-XXX</p>
-                </div>
-            </div>
-            <button onclick="closeReviewModal()" class="p-1 hover:bg-slate-100 rounded-lg text-slate-400"><span class="material-icons-outlined text-xl">close</span></button>
-        </div>
-        <div class="my-4 space-y-3">
-            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nama Arsip</p>
-                        <p id="reviewName" class="font-bold text-slate-800 mt-1">-</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Klasifikasi</p>
-                        <p id="reviewClass" class="font-bold text-slate-800 mt-1">-</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Unggah</p>
-                        <p id="reviewDate" class="font-bold text-slate-800 mt-1">-</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</p>
-                        <p class="font-bold mt-1 text-amber-600">Pending Review</p>
-                    </div>
-                </div>
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Catatan Review</label>
-                <textarea id="reviewNotes" rows="3" placeholder="Masukkan catatan hasil review dokumen..." class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-none"></textarea>
-            </div>
-        </div>
-        <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
-            <button onclick="handleRejectReview()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5"><span class="material-icons-outlined text-base">close</span> Tolak</button>
-            <button onclick="handleApproveReview()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5"><span class="material-icons-outlined text-base">check</span> Verifikasi</button>
         </div>
     </div>
 </div>
@@ -402,33 +350,6 @@
         }
         window.location.href = `/archives/${archive.dataset.archiveId}/download`;
         closeDetailModal();
-    }
-
-    // --- Review Modal ---
-    function showReviewModal(no, name, cls, date) {
-        document.getElementById('reviewDocNo').textContent = no;
-        document.getElementById('reviewName').textContent = name;
-        document.getElementById('reviewClass').textContent = cls;
-        document.getElementById('reviewDate').textContent = date;
-        document.getElementById('reviewNotes').value = '';
-        document.getElementById('reviewModal').classList.add('active');
-    }
-    function closeReviewModal() { document.getElementById('reviewModal').classList.remove('active'); }
-    function handleApproveReview() {
-        const no = document.getElementById('reviewDocNo').textContent;
-        closeReviewModal();
-        showToast(`Arsip ${no} berhasil DIVERIFIKASI ✓`, 'success');
-
-        // Update stats
-        const pendingEl = document.getElementById('statPendingReview');
-        const verifiedEl = document.getElementById('statVerified');
-        pendingEl.textContent = parseInt(pendingEl.textContent) - 1;
-        verifiedEl.textContent = (parseInt(verifiedEl.textContent.replace(/,/g, '')) + 1).toLocaleString('id-ID');
-    }
-    function handleRejectReview() {
-        const no = document.getElementById('reviewDocNo').textContent;
-        closeReviewModal();
-        showToast(`Arsip ${no} DITOLAK — perlu revisi.`, 'error');
     }
 
     // --- Quick Audit Scan ---
@@ -523,8 +444,8 @@
         body.innerHTML = archives.length ? archives.map(archive => {
             const label = archive.status === 'disetujui' ? 'Verified' : archive.status === 'ditolak' ? 'Incomplete' : 'Pending Review';
             const tone = archive.status === 'disetujui' ? 'emerald' : archive.status === 'ditolak' ? 'red' : 'amber';
-            const action = archive.status === 'menunggu' ? `showReviewModal('ARS-${String(archive.id).padStart(6, '0')}', '${escapeHtml(archive.name)}', 'Arsip Digital', '${archive.date}')` : `showDetailModal('ARS-${String(archive.id).padStart(6, '0')}', '${escapeHtml(archive.name)}', 'Arsip Digital', '${archive.date}', '${label}')`;
-            return `<tr class="hover:bg-slate-50/50 transition-colors" data-archive-id="${archive.id}" data-archive-no="ARS-${String(archive.id).padStart(6, '0')}"><td class="py-4 px-6"><span class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200 font-mono">ARS-${String(archive.id).padStart(6, '0')}</span></td><td class="py-4 px-4"><p class="font-bold text-slate-800">${escapeHtml(archive.name)}</p><p class="text-[11px] text-slate-400">Arsip Digital</p></td><td class="py-4 px-4 text-slate-500 font-medium">${archive.date}</td><td class="py-4 px-4"><span class="px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider bg-${tone}-50 text-${tone}-600 border border-${tone}-100 uppercase">${label}</span></td><td class="py-4 px-6 text-center"><button onclick="${action}" class="text-blue-600 hover:text-blue-800 font-bold text-xs hover:underline transition-colors">${archive.status === 'menunggu' ? 'Review' : 'Detail'}</button></td></tr>`;
+            const action = `showDetailModal('ARS-${String(archive.id).padStart(6, '0')}', '${escapeHtml(archive.name)}', 'Arsip Digital', '${archive.date}', '${label}')`;
+            return `<tr class="hover:bg-slate-50/50 transition-colors" data-archive-id="${archive.id}" data-archive-no="ARS-${String(archive.id).padStart(6, '0')}"><td class="py-4 px-6"><span class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200 font-mono">ARS-${String(archive.id).padStart(6, '0')}</span></td><td class="py-4 px-4"><p class="font-bold text-slate-800">${escapeHtml(archive.name)}</p><p class="text-[11px] text-slate-400">Arsip Digital</p></td><td class="py-4 px-4 text-slate-500 font-medium">${archive.date}</td><td class="py-4 px-4"><span class="px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider bg-${tone}-50 text-${tone}-600 border border-${tone}-100 uppercase">${label}</span></td><td class="py-4 px-6 text-center"><button onclick="${action}" class="text-blue-600 hover:text-blue-800 font-bold text-xs hover:underline transition-colors">Detail</button></td></tr>`;
         }).join('') : '<tr><td colspan="5" class="py-10 text-center text-xs text-slate-400">Belum ada arsip.</td></tr>';
     });
 
