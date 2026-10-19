@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\DataArsip;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -32,22 +33,35 @@ class PimpinanController extends Controller
     {
         return view('pimpinan.persetujuan', [
             'archives' => DataArsip::query()->with('category')->where('status', 'menunggu')->latest()->get(),
+            'pendingArchiveCount' => DataArsip::query()->where('status', 'menunggu')->count(),
             'approvedTodayCount' => DataArsip::query()->where('status', 'disetujui')->where('updated_at', '>=', now()->startOfDay())->count(),
             'rejectedArchiveCount' => DataArsip::query()->where('status', 'ditolak')->count(),
         ]);
     }
 
-    public function approve(DataArsip $dataArsip): RedirectResponse
+    public function approve(Request $request, DataArsip $dataArsip): RedirectResponse|JsonResponse
     {
         $dataArsip->update(['status' => 'disetujui']);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Arsip berhasil disetujui.',
+            ]);
+        }
 
         return back()->with('success', 'Arsip berhasil disetujui.');
     }
 
-    public function reject(Request $request, DataArsip $dataArsip): RedirectResponse
+    public function reject(Request $request, DataArsip $dataArsip): RedirectResponse|JsonResponse
     {
         $request->validate(['reason' => ['nullable', 'string', 'max:1000']]);
         $dataArsip->update(['status' => 'ditolak']);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Arsip berhasil ditolak.',
+            ]);
+        }
 
         return back()->with('success', 'Arsip berhasil ditolak.');
     }
