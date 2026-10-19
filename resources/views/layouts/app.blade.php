@@ -184,7 +184,7 @@
                     </div>
                     <div class="flex justify-end gap-2.5 pt-2 border-t border-slate-100">
                         <button type="button" onclick="closeUploadModal()" class="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600">Batal</button>
-                        <button type="submit" class="px-5 py-2 bg-[#0b1f51] text-white rounded-xl text-xs font-bold">Upload Sekarang</button>
+                        <button type="submit" id="uploadSubmitButton" class="px-5 py-2 bg-[#0b1f51] text-white rounded-xl text-xs font-bold">Upload Sekarang</button>
                     </div>
                 </form>
             </div>
@@ -249,14 +249,28 @@
             event.preventDefault();
             const file = document.getElementById('fileUploadInput').files[0];
             if (!file) { showToast('Pilih berkas sebelum mengunggah.', 'error'); return; }
+            const submitButton = document.getElementById('uploadSubmitButton');
             const payload = new FormData();
             payload.append('document', file);
             payload.append('title', document.getElementById('uploadDocName').value.trim());
             payload.append('category_id', document.getElementById('uploadDocCategory').value);
+            submitButton.disabled = true;
+            submitButton.textContent = 'Mengunggah...';
             fetch(@js($uploadRoute), { method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' }, body: payload })
-                .then(response => { if (!response.ok) throw new Error('Dokumen gagal diunggah.'); return response; })
+                .then(async response => {
+                    if (!response.ok) {
+                        const result = await response.json().catch(() => ({}));
+                        throw new Error(result.message || 'Dokumen gagal diunggah.');
+                    }
+
+                    return response;
+                })
                 .then(() => { closeUploadModal(); showToast('Dokumen berhasil diunggah.', 'success'); setTimeout(() => window.location.reload(), 700); })
-                .catch(error => showToast(error.message, 'error'));
+                .catch(error => {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Upload Sekarang';
+                    showToast(error.message, 'error');
+                });
         }
         function handleGlobalSearch(event) {
             if (event.key === 'Enter') {

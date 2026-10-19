@@ -36,7 +36,7 @@ class StaffController extends Controller
         ]);
     }
 
-    public function upload(Request $request): RedirectResponse
+    public function upload(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
             'document' => ['required', 'file', 'mimes:pdf,doc,docx,zip,xls,xlsx', 'max:51200'],
@@ -51,6 +51,12 @@ class StaffController extends Controller
             'category_id' => $validated['category_id'] ?? Category::query()->orderBy('id')->value('id'),
             'status' => 'menunggu',
         ]);
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'message' => 'Berkas berhasil diunggah dan menunggu persetujuan.',
+            ]);
+        }
 
         return back()->with('success', 'Berkas berhasil diunggah dan menunggu persetujuan.');
     }
